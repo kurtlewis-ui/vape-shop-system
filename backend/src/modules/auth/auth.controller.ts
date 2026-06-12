@@ -67,7 +67,7 @@ export class AuthController {
     @CurrentUser() user: RequestUser,
     @Res({ passthrough: true }) res: Response,
   ) {
-    await this.authService.logout(user.userId, user.sessionId);
+    await this.authService.logout(user.userId, user.sessionId!);
 
     // Clear refresh token cookie
     res.clearCookie('refreshToken');
@@ -87,7 +87,7 @@ export class AuthController {
 
     const result = await this.authService.refreshToken(
       user.userId,
-      user.sessionId,
+      user.sessionId!,
       ipAddress,
     );
 

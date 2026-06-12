@@ -62,6 +62,7 @@ model User {
   cashDrawerTransactions CashDrawer[]
   systemSettingsUpdates SystemSetting[]
   notifications         Notification[]
+  inventoryLogs         InventoryLog[]
 
   @@index([roleId])
   @@index([email, passwordHash])
