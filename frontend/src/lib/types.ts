@@ -5,6 +5,13 @@ export interface Role {
   name: string;
 }
 
+// Returned by GET /users/roles (used to populate the "add staff" role select).
+export interface RoleOption {
+  id: string;
+  name: string;
+  description?: string | null;
+}
+
 // The user object returned by POST /auth/login.
 export interface AuthUser {
   id: string;

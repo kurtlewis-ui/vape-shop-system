@@ -255,6 +255,74 @@ export class UsersService {
     return userWithoutPassword;
   }
 
+  async resetPassword(
+    id: string,
+    newPassword: string,
+    confirmPassword: string,
+    resetBy: string,
+  ) {
+    if (newPassword !== confirmPassword) {
+      throw new BadRequestException('New passwords do not match');
+    }
+
+    // Get the target user
+    const user = await this.prisma.user.findFirst({
+      where: {
+        id,
+        deletedAt: null,
+      },
+      include: {
+        role: true,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Only an Owner can change an Owner account's password
+    const resetter = await this.prisma.user.findUnique({
+      where: { id: resetBy },
+      include: { role: true },
+    });
+
+    if (user.role.name === 'Owner' && resetter?.role.name !== 'Owner') {
+      throw new ForbiddenException('Cannot change an Owner account password');
+    }
+
+    // Hash and store the new password
+    const bcryptRounds = parseInt(this.config.get<string>('BCRYPT_ROUNDS') ?? '12', 10) || 12;
+    const passwordHash = await bcrypt.hash(newPassword, bcryptRounds);
+
+    await this.prisma.user.update({
+      where: { id },
+      data: {
+        passwordHash,
+        passwordChangedAt: new Date(),
+        mustChangePassword: false,
+        failedLoginAttempts: 0,
+        isLocked: false,
+      },
+    });
+
+    // Force the user to log in again with the new password
+    await this.prisma.session.deleteMany({
+      where: { userId: id },
+    });
+
+    // Audit log (never store the password value)
+    await this.prisma.auditLog.create({
+      data: {
+        userId: resetBy,
+        action: 'USER_PASSWORD_RESET',
+        entityType: 'User',
+        entityId: id,
+      },
+    });
+
+    return { message: 'Password updated successfully' };
+  }
+
   async remove(id: string, deletedBy: string) {
     // Get user
     const user = await this.prisma.user.findFirst({
