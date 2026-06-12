@@ -17,6 +17,7 @@ import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { QueryUserDto } from './dto/query-user.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -108,6 +109,31 @@ export class UsersController {
   ) {
     const result = await this.usersService.update(id, updateUserDto, user.userId);
     
+    return {
+      success: true,
+      data: result,
+    };
+  }
+
+  @Patch(':id/password')
+  @Roles('Owner', 'Admin')
+  @ApiOperation({ summary: 'Reset a user password (Owner/Admin)' })
+  @ApiResponse({ status: 200, description: 'Password updated successfully' })
+  @ApiResponse({ status: 400, description: 'Passwords do not match or invalid' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  async resetPassword(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() resetPasswordDto: ResetPasswordDto,
+    @CurrentUser() user: RequestUser,
+  ) {
+    const result = await this.usersService.resetPassword(
+      id,
+      resetPasswordDto.newPassword,
+      resetPasswordDto.confirmPassword,
+      user.userId,
+    );
+
     return {
       success: true,
       data: result,
