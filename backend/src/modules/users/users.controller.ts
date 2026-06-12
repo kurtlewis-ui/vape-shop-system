@@ -1,0 +1,127 @@
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+  UseGuards,
+  HttpCode,
+  HttpStatus,
+  ParseUUIDPipe,
+} from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { UsersService } from './users.service';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { QueryUserDto } from './dto/query-user.dto';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { RequestUser } from '../../common/interfaces/request-user.interface';
+
+@ApiTags('users')
+@ApiBearerAuth()
+@Controller('users')
+@UseGuards(RolesGuard)
+export class UsersController {
+  constructor(private readonly usersService: UsersService) {}
+
+  @Post()
+  @Roles('Owner', 'Admin')
+  @ApiOperation({ summary: 'Create new user' })
+  @ApiResponse({ status: 201, description: 'User created successfully' })
+  @ApiResponse({ status: 403, description: 'Forbidden - insufficient permissions' })
+  @ApiResponse({ status: 409, description: 'Email already exists' })
+  async create(@Body() createUserDto: CreateUserDto, @CurrentUser() user: RequestUser) {
+    const result = await this.usersService.create(createUserDto, user.userId);
+    
+    return {
+      success: true,
+      data: result,
+    };
+  }
+
+  @Get()
+  @Roles('Owner', 'Admin')
+  @ApiOperation({ summary: 'Get all users' })
+  @ApiResponse({ status: 200, description: 'Users retrieved successfully' })
+  async findAll(@Query() query: QueryUserDto) {
+    const result = await this.usersService.findAll(query);
+    
+    return {
+      success: true,
+      data: result.data,
+      pagination: result.pagination,
+    };
+  }
+
+  @Get('roles')
+  @Roles('Owner', 'Admin')
+  @ApiOperation({ summary: 'Get all roles' })
+  @ApiResponse({ status: 200, description: 'Roles retrieved successfully' })
+  async getRoles() {
+    const roles = await this.usersService.getRoles();
+    
+    return {
+      success: true,
+      data: roles,
+    };
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Get user by ID' })
+  @ApiResponse({ status: 200, description: 'User retrieved successfully' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  async findOne(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: RequestUser) {
+    // Allow users to view their own profile, or Owner/Admin to view anyone
+    if (user.userId !== id && !['Owner', 'Admin'].includes(user.role)) {
+      return {
+        success: false,
+        error: {
+          code: 'FORBIDDEN',
+          message: 'You can only view your own profile',
+        },
+      };
+    }
+
+    const result = await this.usersService.findOne(id);
+    
+    return {
+      success: true,
+      data: result,
+    };
+  }
+
+  @Patch(':id')
+  @Roles('Owner', 'Admin')
+  @ApiOperation({ summary: 'Update user' })
+  @ApiResponse({ status: 200, description: 'User updated successfully' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  async update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updateUserDto: UpdateUserDto,
+    @CurrentUser() user: RequestUser,
+  ) {
+    const result = await this.usersService.update(id, updateUserDto, user.userId);
+    
+    return {
+      success: true,
+      data: result,
+    };
+  }
+
+  @Delete(':id')
+  @Roles('Owner')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Delete user (soft delete)' })
+  @ApiResponse({ status: 204, description: 'User deleted successfully' })
+  @ApiResponse({ status: 403, description: 'Forbidden - Owner role required' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  async remove(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: RequestUser) {
+    await this.usersService.remove(id, user.userId);
+  }
+}
