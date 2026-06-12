@@ -39,6 +39,16 @@ export class UsersService {
       throw new NotFoundException('Role not found');
     }
 
+    // Verify branch exists if provided
+    if (createUserDto.branchId) {
+      const branch = await this.prisma.branch.findFirst({
+        where: { id: createUserDto.branchId, deletedAt: null },
+      });
+      if (!branch) {
+        throw new NotFoundException('Branch not found');
+      }
+    }
+
     // Hash password
     const bcryptRounds = parseInt(this.config.get<string>('BCRYPT_ROUNDS') ?? '12', 10) || 12;
     const passwordHash = await bcrypt.hash(createUserDto.password, bcryptRounds);
@@ -52,10 +62,12 @@ export class UsersService {
         lastName: createUserDto.lastName,
         roleId: createUserDto.roleId,
         phone: createUserDto.phone,
+        branchId: createUserDto.branchId ?? null,
         mustChangePassword: true, // Force password change on first login
       },
       include: {
         role: true,
+        branch: true,
       },
     });
 
@@ -71,6 +83,7 @@ export class UsersService {
           firstName: user.firstName,
           lastName: user.lastName,
           role: role.name,
+          branchId: user.branchId,
         },
       },
     });
@@ -126,6 +139,12 @@ export class UsersService {
             name: true,
           },
         },
+        branch: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
       orderBy: {
         [sortBy]: sortOrder,
@@ -158,6 +177,7 @@ export class UsersService {
       },
       include: {
         role: true,
+        branch: true,
       },
     });
 
@@ -223,12 +243,23 @@ export class UsersService {
       }
     }
 
+    // Verify branch exists if branchId is being set (skip null = unassign)
+    if (updateUserDto.branchId) {
+      const branch = await this.prisma.branch.findFirst({
+        where: { id: updateUserDto.branchId, deletedAt: null },
+      });
+      if (!branch) {
+        throw new NotFoundException('Branch not found');
+      }
+    }
+
     // Update user
     const updatedUser = await this.prisma.user.update({
       where: { id },
       data: updateUserDto,
       include: {
         role: true,
+        branch: true,
       },
     });
 
@@ -244,6 +275,7 @@ export class UsersService {
           lastName: currentUser.lastName,
           email: currentUser.email,
           roleId: currentUser.roleId,
+          branchId: currentUser.branchId,
           isActive: currentUser.isActive,
         },
         newValues: updateUserDto as unknown as Prisma.InputJsonValue,

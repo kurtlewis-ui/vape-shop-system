@@ -26,7 +26,7 @@ export class AuthService {
     // Find user with role
     const user = await this.prisma.user.findUnique({
       where: { email },
-      include: { role: true },
+      include: { role: true, branch: true },
     });
 
     if (!user) {
@@ -97,6 +97,9 @@ export class AuthService {
           id: user.role.id,
           name: user.role.name,
         },
+        branch: user.branch
+          ? { id: user.branch.id, name: user.branch.name }
+          : null,
         mustChangePassword: user.mustChangePassword,
       },
     };
@@ -117,7 +120,7 @@ export class AuthService {
   async refreshToken(userId: string, sessionId: string, ipAddress: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      include: { role: true },
+      include: { role: true, branch: true },
     });
 
     if (!user || !user.isActive || user.isLocked) {
@@ -160,6 +163,9 @@ export class AuthService {
           id: user.role.id,
           name: user.role.name,
         },
+        branch: user.branch
+          ? { id: user.branch.id, name: user.branch.name }
+          : null,
       },
     };
   }

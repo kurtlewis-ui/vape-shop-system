@@ -5,13 +5,21 @@ import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/lib/store';
 
-const navItems = [
+interface NavItem {
+  label: string;
+  href: string;
+  enabled: boolean;
+  /** If set, only these roles see the link. */
+  roles?: string[];
+}
+
+const navItems: NavItem[] = [
   { label: 'Overview', href: '/dashboard', enabled: true },
-  { label: 'Users', href: '/dashboard/users', enabled: true },
+  { label: 'Users', href: '/dashboard/users', enabled: true, roles: ['Owner', 'Admin'] },
+  { label: 'Branches', href: '/dashboard/branches', enabled: true, roles: ['Owner', 'Admin'] },
   { label: 'Products', href: '/dashboard/products', enabled: false },
-  { label: 'Inventory', href: '/dashboard/inventory', enabled: false },
   { label: 'Sales', href: '/dashboard/sales', enabled: false },
-  { label: 'Reports', href: '/dashboard/reports', enabled: false },
+  { label: 'Reports', href: '/dashboard/reports', enabled: false, roles: ['Owner', 'Admin'] },
 ];
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
@@ -49,13 +57,18 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     return null;
   }
 
+  const currentRole = user?.role?.name;
+  const visibleNav = navItems.filter(
+    (item) => !item.roles || (currentRole && item.roles.includes(currentRole)),
+  );
+
   return (
     <div className="flex min-h-screen">
       {/* Sidebar */}
       <aside className="hidden w-60 flex-col bg-slate-900 p-4 text-slate-200 md:flex">
         <div className="mb-8 px-2 text-lg font-bold text-white">Vape Shop</div>
         <nav className="flex flex-1 flex-col gap-1">
-          {navItems.map((item) => {
+          {visibleNav.map((item) => {
             const active = pathname === item.href;
             if (!item.enabled) {
               return (
@@ -85,7 +98,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
       {/* Main content */}
       <div className="flex flex-1 flex-col">
-        <header className="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-3">
+        <header className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-white px-6 py-3">
           <div className="text-sm text-slate-500">
             {user ? (
               <>
@@ -94,6 +107,11 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 <span className="rounded bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
                   {user.role?.name}
                 </span>
+                {user.branch && (
+                  <span className="ml-2 rounded bg-indigo-50 px-2 py-0.5 text-xs text-indigo-700">
+                    {user.branch.name}
+                  </span>
+                )}
               </>
             ) : (
               'Signed in'

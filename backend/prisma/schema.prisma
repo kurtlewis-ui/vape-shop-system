@@ -1,10 +1,9 @@
-// Vape Shop Inventory and Sales Management System
-// Prisma Schema - Production Ready
+// Vape Shop Management System
+// Prisma Schema (Philippines, PHP currency, simplified per spec)
 // PostgreSQL Database
 
 generator client {
   provider = "prisma-client-js"
-  previewFeatures = ["fullTextSearch", "fullTextIndex"]
 }
 
 datasource db {
@@ -31,40 +30,35 @@ model Role {
 }
 
 model User {
-  id                    String    @id @default(uuid()) @db.Uuid
-  email                 String    @unique @db.VarChar(255)
-  passwordHash          String    @map("password_hash") @db.VarChar(255)
-  firstName             String    @map("first_name") @db.VarChar(100)
-  lastName              String    @map("last_name") @db.VarChar(100)
-  roleId                String    @map("role_id") @db.Uuid
-  phone                 String?   @db.VarChar(20)
-  isActive              Boolean   @default(true) @map("is_active")
-  isLocked              Boolean   @default(false) @map("is_locked")
-  failedLoginAttempts   Int       @default(0) @map("failed_login_attempts")
-  lastLoginAt           DateTime? @map("last_login_at") @db.Timestamp(6)
-  lastLoginIp           String?   @map("last_login_ip") @db.VarChar(45)
-  passwordChangedAt     DateTime? @map("password_changed_at") @db.Timestamp(6)
-  mustChangePassword    Boolean   @default(false) @map("must_change_password")
-  createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
-  updatedAt             DateTime  @updatedAt @map("updated_at") @db.Timestamp(6)
-  deletedAt             DateTime? @map("deleted_at") @db.Timestamp(6)
+  id                  String    @id @default(uuid()) @db.Uuid
+  email               String    @unique @db.VarChar(255)
+  passwordHash        String    @map("password_hash") @db.VarChar(255)
+  firstName           String    @map("first_name") @db.VarChar(100)
+  lastName            String    @map("last_name") @db.VarChar(100)
+  roleId              String    @map("role_id") @db.Uuid
+  // Branch a Staff is assigned to. Null for Owner/Admin who can act
+  // across all branches; required (in business logic) for Staff.
+  branchId            String?   @map("branch_id") @db.Uuid
+  phone               String?   @db.VarChar(20)
+  isActive            Boolean   @default(true) @map("is_active")
+  isLocked            Boolean   @default(false) @map("is_locked")
+  failedLoginAttempts Int       @default(0) @map("failed_login_attempts")
+  lastLoginAt         DateTime? @map("last_login_at") @db.Timestamp(6)
+  lastLoginIp         String?   @map("last_login_ip") @db.VarChar(45)
+  passwordChangedAt   DateTime? @map("password_changed_at") @db.Timestamp(6)
+  mustChangePassword  Boolean   @default(false) @map("must_change_password")
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamp(6)
+  deletedAt           DateTime? @map("deleted_at") @db.Timestamp(6)
 
   // Relations
-  role                  Role      @relation(fields: [roleId], references: [id], onDelete: Restrict)
-  sessions              Session[]
-  sales                 Sale[]
-  shifts                Shift[]
-  purchaseOrders        PurchaseOrder[]
-  auditLogs             AuditLog[]
-  inventoryCountedBy    Inventory[] @relation("CountedBy")
-  ageVerifiedCustomers  Customer[] @relation("AgeVerifiedBy")
-  voidedSales           Sale[] @relation("VoidedBy")
-  cashDrawerTransactions CashDrawer[]
-  systemSettingsUpdates SystemSetting[]
-  notifications         Notification[]
-  inventoryLogs         InventoryLog[]
+  role      Role       @relation(fields: [roleId], references: [id], onDelete: Restrict)
+  branch    Branch?    @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  sessions  Session[]
+  auditLogs AuditLog[]
 
   @@index([roleId])
+  @@index([branchId])
   @@index([email, passwordHash])
   @@index([isActive])
   @@map("users")
@@ -90,420 +84,42 @@ model Session {
   @@map("sessions")
 }
 
-
-
 // ============================================================================
-// PRODUCT MANAGEMENT
+// BRANCHES
 // ============================================================================
 
-model Category {
-  id           String     @id @default(uuid()) @db.Uuid
-  name         String     @db.VarChar(100)
-  description  String?    @db.Text
-  parentId     String?    @map("parent_id") @db.Uuid
-  slug         String     @unique @db.VarChar(100)
-  displayOrder Int        @default(0) @map("display_order")
-  isActive     Boolean    @default(true) @map("is_active")
-  createdAt    DateTime   @default(now()) @map("created_at") @db.Timestamp(6)
-  updatedAt    DateTime   @updatedAt @map("updated_at") @db.Timestamp(6)
-  deletedAt    DateTime?  @map("deleted_at") @db.Timestamp(6)
+model Branch {
+  id        String    @id @default(uuid()) @db.Uuid
+  name      String    @unique @db.VarChar(100)
+  address   String?   @db.Text
+  isActive  Boolean   @default(true) @map("is_active")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamp(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamp(6)
 
   // Relations
-  parent   Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
-  children Category[] @relation("CategoryHierarchy")
-  products Product[]
+  users User[]
 
-  @@index([parentId])
-  @@index([displayOrder])
-  @@map("categories")
-}
-
-model Brand {
-  id          String    @id @default(uuid()) @db.Uuid
-  name        String    @unique @db.VarChar(100)
-  description String?   @db.Text
-  logoUrl     String?   @map("logo_url") @db.VarChar(500)
-  website     String?   @db.VarChar(255)
-  isActive    Boolean   @default(true) @map("is_active")
-  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
-  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamp(6)
-  deletedAt   DateTime? @map("deleted_at") @db.Timestamp(6)
-
-  // Relations
-  products Product[]
-
-  @@map("brands")
-}
-
-model Supplier {
-  id             String    @id @default(uuid()) @db.Uuid
-  name           String    @db.VarChar(200)
-  contactPerson  String?   @map("contact_person") @db.VarChar(100)
-  email          String?   @db.VarChar(255)
-  phone          String?   @db.VarChar(20)
-  addressLine1   String?   @map("address_line1") @db.VarChar(255)
-  addressLine2   String?   @map("address_line2") @db.VarChar(255)
-  city           String?   @db.VarChar(100)
-  state          String?   @db.VarChar(50)
-  postalCode     String?   @map("postal_code") @db.VarChar(20)
-  country        String    @default("USA") @db.VarChar(50)
-  taxId          String?   @map("tax_id") @db.VarChar(50)
-  paymentTerms   String?   @map("payment_terms") @db.VarChar(100)
-  notes          String?   @db.Text
-  isActive       Boolean   @default(true) @map("is_active")
-  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
-  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamp(6)
-  deletedAt      DateTime? @map("deleted_at") @db.Timestamp(6)
-
-  // Relations
-  products       Product[]
-  purchaseOrders PurchaseOrder[]
-
-  @@index([name])
   @@index([isActive])
-  @@map("suppliers")
-}
-
-model Product {
-  id              String    @id @default(uuid()) @db.Uuid
-  name            String    @db.VarChar(255)
-  description     String?   @db.Text
-  categoryId      String    @map("category_id") @db.Uuid
-  brandId         String?   @map("brand_id") @db.Uuid
-  supplierId      String?   @map("supplier_id") @db.Uuid
-  imageUrl        String?   @map("image_url") @db.VarChar(500)
-  isAgeRestricted Boolean   @default(true) @map("is_age_restricted")
-  minimumAge      Int       @default(21) @map("minimum_age")
-  isActive        Boolean   @default(true) @map("is_active")
-  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
-  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamp(6)
-  deletedAt       DateTime? @map("deleted_at") @db.Timestamp(6)
-
-  // Relations
-  category        Category         @relation(fields: [categoryId], references: [id], onDelete: Restrict)
-  brand           Brand?           @relation(fields: [brandId], references: [id], onDelete: SetNull)
-  supplier        Supplier?        @relation(fields: [supplierId], references: [id], onDelete: SetNull)
-  variants        ProductVariant[]
-
-  @@index([categoryId])
-  @@index([brandId])
-  @@index([supplierId])
-  @@index([name])
-  @@index([isActive])
-  @@map("products")
-}
-
-model ProductVariant {
-  id               String    @id @default(uuid()) @db.Uuid
-  productId        String    @map("product_id") @db.Uuid
-  sku              String    @unique @db.VarChar(100)
-  barcode          String?   @unique @db.VarChar(100)
-  variantName      String    @map("variant_name") @db.VarChar(255)
-  attributes       Json?     @db.JsonB
-  costPrice        Decimal   @map("cost_price") @db.Decimal(10, 2)
-  retailPrice      Decimal   @map("retail_price") @db.Decimal(10, 2)
-  compareAtPrice   Decimal?  @map("compare_at_price") @db.Decimal(10, 2)
-  taxRate          Decimal   @default(0.00) @map("tax_rate") @db.Decimal(5, 2)
-  reorderPoint     Int       @default(10) @map("reorder_point")
-  reorderQuantity  Int       @default(50) @map("reorder_quantity")
-  weight           Decimal?  @db.Decimal(8, 2)
-  dimensions       Json?     @db.JsonB
-  isActive         Boolean   @default(true) @map("is_active")
-  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
-  updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamp(6)
-  deletedAt        DateTime? @map("deleted_at") @db.Timestamp(6)
-
-  // Relations
-  product            Product             @relation(fields: [productId], references: [id], onDelete: Cascade)
-  inventory          Inventory?
-  inventoryLogs      InventoryLog[]
-  saleItems          SaleItem[]
-  purchaseOrderItems PurchaseOrderItem[]
-
-  @@index([productId])
-  @@index([isActive])
-  @@index([retailPrice])
-  @@map("product_variants")
-}
-
-
-
-// ============================================================================
-// INVENTORY MANAGEMENT
-// ============================================================================
-
-model Inventory {
-  id               String    @id @default(uuid()) @db.Uuid
-  productVariantId String    @unique @map("product_variant_id") @db.Uuid
-  quantityOnHand   Int       @default(0) @map("quantity_on_hand")
-  quantityReserved Int       @default(0) @map("quantity_reserved")
-  lastCountedAt    DateTime? @map("last_counted_at") @db.Timestamp(6)
-  lastCountedBy    String?   @map("last_counted_by") @db.Uuid
-  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
-  updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamp(6)
-
-  // Relations
-  productVariant ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Cascade)
-  countedByUser  User?          @relation("CountedBy", fields: [lastCountedBy], references: [id], onDelete: SetNull)
-
-  @@index([productVariantId])
-  @@map("inventory")
-}
-
-model InventoryLog {
-  id               String   @id @default(uuid()) @db.Uuid
-  productVariantId String   @map("product_variant_id") @db.Uuid
-  changeType       String   @db.VarChar(50)
-  quantityChange   Int      @map("quantity_change")
-  quantityBefore   Int      @map("quantity_before")
-  quantityAfter    Int      @map("quantity_after")
-  referenceId      String?  @map("reference_id") @db.Uuid
-  referenceType    String?  @map("reference_type") @db.VarChar(50)
-  reason           String?  @db.Text
-  notes            String?  @db.Text
-  userId           String   @map("user_id") @db.Uuid
-  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamp(6)
-
-  // Relations
-  productVariant ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Restrict)
-  user           User           @relation(fields: [userId], references: [id], onDelete: Restrict)
-
-  @@index([productVariantId, createdAt(sort: Desc)])
-  @@index([changeType])
-  @@index([userId])
-  @@index([referenceId, referenceType])
-  @@index([createdAt(sort: Desc)])
-  @@map("inventory_logs")
+  @@map("branches")
 }
 
 // ============================================================================
-// SALES MANAGEMENT
-// ============================================================================
-
-model Customer {
-  id                String    @id @default(uuid()) @db.Uuid
-  firstName         String?   @map("first_name") @db.VarChar(100)
-  lastName          String?   @map("last_name") @db.VarChar(100)
-  email             String?   @unique @db.VarChar(255)
-  phone             String?   @db.VarChar(20)
-  dateOfBirth       DateTime? @map("date_of_birth") @db.Date
-  ageVerified       Boolean   @default(false) @map("age_verified")
-  ageVerifiedAt     DateTime? @map("age_verified_at") @db.Timestamp(6)
-  ageVerifiedBy     String?   @map("age_verified_by") @db.Uuid
-  loyaltyPoints     Int       @default(0) @map("loyalty_points")
-  totalSpent        Decimal   @default(0.00) @map("total_spent") @db.Decimal(10, 2)
-  notes             String?   @db.Text
-  marketingConsent  Boolean   @default(false) @map("marketing_consent")
-  isActive          Boolean   @default(true) @map("is_active")
-  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
-  updatedAt         DateTime  @updatedAt @map("updated_at") @db.Timestamp(6)
-  deletedAt         DateTime? @map("deleted_at") @db.Timestamp(6)
-
-  // Relations
-  verifiedBy User?  @relation("AgeVerifiedBy", fields: [ageVerifiedBy], references: [id], onDelete: SetNull)
-  sales      Sale[]
-
-  @@index([phone])
-  @@index([isActive])
-  @@map("customers")
-}
-
-model PaymentMethod {
-  id        String   @id @default(uuid()) @db.Uuid
-  name      String   @unique @db.VarChar(50)
-  type      String   @db.VarChar(20)
-  isActive  Boolean  @default(true) @map("is_active")
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(6)
-
-  // Relations
-  sales Sale[]
-
-  @@map("payment_methods")
-}
-
-model Sale {
-  id              String    @id @default(uuid()) @db.Uuid
-  saleNumber      String    @unique @map("sale_number") @db.VarChar(50)
-  customerId      String?   @map("customer_id") @db.Uuid
-  userId          String    @map("user_id") @db.Uuid
-  shiftId         String?   @map("shift_id") @db.Uuid
-  subtotal        Decimal   @db.Decimal(10, 2)
-  taxAmount       Decimal   @default(0.00) @map("tax_amount") @db.Decimal(10, 2)
-  discountAmount  Decimal   @default(0.00) @map("discount_amount") @db.Decimal(10, 2)
-  totalAmount     Decimal   @map("total_amount") @db.Decimal(10, 2)
-  amountPaid      Decimal   @map("amount_paid") @db.Decimal(10, 2)
-  changeAmount    Decimal   @default(0.00) @map("change_amount") @db.Decimal(10, 2)
-  paymentMethodId String    @map("payment_method_id") @db.Uuid
-  status          String    @default("COMPLETED") @db.VarChar(20)
-  ageVerified     Boolean   @default(false) @map("age_verified")
-  notes           String?   @db.Text
-  voidedAt        DateTime? @map("voided_at") @db.Timestamp(6)
-  voidedBy        String?   @map("voided_by") @db.Uuid
-  voidReason      String?   @map("void_reason") @db.Text
-  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
-  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamp(6)
-
-  // Relations
-  customer      Customer?      @relation(fields: [customerId], references: [id], onDelete: SetNull)
-  user          User           @relation(fields: [userId], references: [id], onDelete: Restrict)
-  shift         Shift?         @relation(fields: [shiftId], references: [id], onDelete: SetNull)
-  paymentMethod PaymentMethod  @relation(fields: [paymentMethodId], references: [id], onDelete: Restrict)
-  voidedByUser  User?          @relation("VoidedBy", fields: [voidedBy], references: [id], onDelete: SetNull)
-  items         SaleItem[]
-
-  @@index([customerId])
-  @@index([userId])
-  @@index([shiftId])
-  @@index([status])
-  @@index([createdAt(sort: Desc)])
-  @@index([userId, createdAt(sort: Desc)])
-  @@map("sales")
-}
-
-model SaleItem {
-  id               String   @id @default(uuid()) @db.Uuid
-  saleId           String   @map("sale_id") @db.Uuid
-  productVariantId String   @map("product_variant_id") @db.Uuid
-  productSnapshot  Json     @map("product_snapshot") @db.JsonB
-  quantity         Int
-  unitPrice        Decimal  @map("unit_price") @db.Decimal(10, 2)
-  unitCost         Decimal  @map("unit_cost") @db.Decimal(10, 2)
-  taxRate          Decimal  @map("tax_rate") @db.Decimal(5, 2)
-  discountAmount   Decimal  @default(0.00) @map("discount_amount") @db.Decimal(10, 2)
-  lineTotal        Decimal  @map("line_total") @db.Decimal(10, 2)
-  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamp(6)
-
-  // Relations
-  sale           Sale           @relation(fields: [saleId], references: [id], onDelete: Cascade)
-  productVariant ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Restrict)
-
-  @@index([saleId])
-  @@index([productVariantId])
-  @@index([createdAt])
-  @@map("sale_items")
-}
-
-
-
-// ============================================================================
-// PURCHASE ORDERS
-// ============================================================================
-
-model PurchaseOrder {
-  id           String    @id @default(uuid()) @db.Uuid
-  poNumber     String    @unique @map("po_number") @db.VarChar(50)
-  supplierId   String    @map("supplier_id") @db.Uuid
-  userId       String    @map("user_id") @db.Uuid
-  status       String    @default("DRAFT") @db.VarChar(20)
-  orderDate    DateTime  @default(now()) @map("order_date") @db.Date
-  expectedDate DateTime? @map("expected_date") @db.Date
-  receivedDate DateTime? @map("received_date") @db.Date
-  subtotal     Decimal   @default(0.00) @db.Decimal(10, 2)
-  taxAmount    Decimal   @default(0.00) @map("tax_amount") @db.Decimal(10, 2)
-  shippingCost Decimal   @default(0.00) @map("shipping_cost") @db.Decimal(10, 2)
-  totalAmount  Decimal   @map("total_amount") @db.Decimal(10, 2)
-  notes        String?   @db.Text
-  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
-  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamp(6)
-
-  // Relations
-  supplier Supplier            @relation(fields: [supplierId], references: [id], onDelete: Restrict)
-  user     User                @relation(fields: [userId], references: [id], onDelete: Restrict)
-  items    PurchaseOrderItem[]
-
-  @@index([supplierId])
-  @@index([userId])
-  @@index([status])
-  @@index([orderDate(sort: Desc)])
-  @@map("purchase_orders")
-}
-
-model PurchaseOrderItem {
-  id                String   @id @default(uuid()) @db.Uuid
-  purchaseOrderId   String   @map("purchase_order_id") @db.Uuid
-  productVariantId  String   @map("product_variant_id") @db.Uuid
-  quantityOrdered   Int      @map("quantity_ordered")
-  quantityReceived  Int      @default(0) @map("quantity_received")
-  unitCost          Decimal  @map("unit_cost") @db.Decimal(10, 2)
-  lineTotal         Decimal  @map("line_total") @db.Decimal(10, 2)
-  notes             String?  @db.Text
-  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamp(6)
-  updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
-
-  // Relations
-  purchaseOrder  PurchaseOrder  @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
-  productVariant ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Restrict)
-
-  @@index([purchaseOrderId])
-  @@index([productVariantId])
-  @@map("purchase_order_items")
-}
-
-// ============================================================================
-// CASH MANAGEMENT
-// ============================================================================
-
-model Shift {
-  id            String    @id @default(uuid()) @db.Uuid
-  userId        String    @map("user_id") @db.Uuid
-  startedAt     DateTime  @default(now()) @map("started_at") @db.Timestamp(6)
-  endedAt       DateTime? @map("ended_at") @db.Timestamp(6)
-  startingCash  Decimal   @map("starting_cash") @db.Decimal(10, 2)
-  endingCash    Decimal?  @map("ending_cash") @db.Decimal(10, 2)
-  expectedCash  Decimal?  @map("expected_cash") @db.Decimal(10, 2)
-  cashDifference Decimal? @map("cash_difference") @db.Decimal(10, 2)
-  totalSales    Decimal   @default(0.00) @map("total_sales") @db.Decimal(10, 2)
-  totalRefunds  Decimal   @default(0.00) @map("total_refunds") @db.Decimal(10, 2)
-  notes         String?   @db.Text
-  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
-  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamp(6)
-
-  // Relations
-  user        User         @relation(fields: [userId], references: [id], onDelete: Restrict)
-  sales       Sale[]
-  cashDrawers CashDrawer[]
-
-  @@index([userId])
-  @@index([startedAt(sort: Desc)])
-  @@index([endedAt])
-  @@map("shifts")
-}
-
-model CashDrawer {
-  id              String   @id @default(uuid()) @db.Uuid
-  shiftId         String   @map("shift_id") @db.Uuid
-  transactionType String   @map("transaction_type") @db.VarChar(20)
-  amount          Decimal  @db.Decimal(10, 2)
-  reason          String?  @db.Text
-  userId          String   @map("user_id") @db.Uuid
-  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamp(6)
-
-  // Relations
-  shift Shift @relation(fields: [shiftId], references: [id], onDelete: Cascade)
-  user  User  @relation(fields: [userId], references: [id], onDelete: Restrict)
-
-  @@index([shiftId])
-  @@index([transactionType])
-  @@index([createdAt])
-  @@map("cash_drawers")
-}
-
-// ============================================================================
-// SYSTEM & AUDIT
+// AUDIT LOG
 // ============================================================================
 
 model AuditLog {
-  id         String    @id @default(uuid()) @db.Uuid
-  userId     String?   @map("user_id") @db.Uuid
-  action     String    @db.VarChar(100)
-  entityType String    @map("entity_type") @db.VarChar(50)
-  entityId   String?   @map("entity_id") @db.Uuid
-  oldValues  Json?     @map("old_values") @db.JsonB
-  newValues  Json?     @map("new_values") @db.JsonB
-  ipAddress  String?   @map("ip_address") @db.VarChar(45)
-  userAgent  String?   @map("user_agent") @db.Text
-  requestId  String?   @map("request_id") @db.Uuid
-  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String?  @map("user_id") @db.Uuid
+  action     String   @db.VarChar(100)
+  entityType String   @map("entity_type") @db.VarChar(50)
+  entityId   String?  @map("entity_id") @db.Uuid
+  oldValues  Json?    @map("old_values") @db.JsonB
+  newValues  Json?    @map("new_values") @db.JsonB
+  ipAddress  String?  @map("ip_address") @db.VarChar(45)
+  userAgent  String?  @map("user_agent") @db.Text
+  requestId  String?  @map("request_id") @db.Uuid
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamp(6)
 
   // Relations
   user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
@@ -513,46 +129,4 @@ model AuditLog {
   @@index([entityType, entityId])
   @@index([createdAt(sort: Desc)])
   @@map("audit_logs")
-}
-
-model Notification {
-  id        String    @id @default(uuid()) @db.Uuid
-  userId    String?   @map("user_id") @db.Uuid
-  type      String    @db.VarChar(50)
-  title     String    @db.VarChar(255)
-  message   String    @db.Text
-  data      Json?     @db.JsonB
-  isRead    Boolean   @default(false) @map("is_read")
-  readAt    DateTime? @map("read_at") @db.Timestamp(6)
-  priority  String    @default("NORMAL") @db.VarChar(20)
-  expiresAt DateTime? @map("expires_at") @db.Timestamp(6)
-  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
-
-  // Relations
-  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId, isRead])
-  @@index([type])
-  @@index([createdAt(sort: Desc)])
-  @@index([expiresAt])
-  @@map("notifications")
-}
-
-model SystemSetting {
-  id          String   @id @default(uuid()) @db.Uuid
-  key         String   @unique @db.VarChar(100)
-  value       String   @db.Text
-  dataType    String   @map("data_type") @db.VarChar(20)
-  category    String   @db.VarChar(50)
-  description String?  @db.Text
-  isPublic    Boolean  @default(false) @map("is_public")
-  updatedBy   String?  @map("updated_by") @db.Uuid
-  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(6)
-  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
-
-  // Relations
-  updatedByUser User? @relation(fields: [updatedBy], references: [id], onDelete: SetNull)
-
-  @@index([category])
-  @@map("system_settings")
 }
