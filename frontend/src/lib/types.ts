@@ -12,6 +12,23 @@ export interface RoleOption {
   description?: string | null;
 }
 
+// A short branch summary embedded on the auth user / user list rows.
+export interface BranchRef {
+  id: string;
+  name: string;
+}
+
+// The full branch object returned by GET /branches and /branches/:id.
+export interface Branch {
+  id: string;
+  name: string;
+  address: string | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  staffCount: number;
+}
+
 // The user object returned by POST /auth/login.
 export interface AuthUser {
   id: string;
@@ -19,6 +36,7 @@ export interface AuthUser {
   firstName: string;
   lastName: string;
   role: Role;
+  branch?: BranchRef | null;
   mustChangePassword?: boolean;
 }
 
@@ -34,6 +52,8 @@ export interface UserListItem {
   lastLoginAt: string | null;
   createdAt: string;
   role: Role;
+  branchId: string | null;
+  branch: BranchRef | null;
 }
 
 export interface Pagination {

@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api, getApiErrorMessage } from '@/lib/api';
-import type { ApiEnvelope, Branch, RoleOption } from '@/lib/types';
+import type { ApiEnvelope, Branch, RoleOption, UserListItem } from '@/lib/types';
 import { Modal } from './Modal';
 
-interface AddStaffModalProps {
-  open: boolean;
+interface EditStaffModalProps {
+  user: UserListItem | null;
   onClose: () => void;
   roles: RoleOption[];
   branches: Branch[];
@@ -16,90 +16,69 @@ interface AddStaffModalProps {
 const inputClass =
   'w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200';
 
-export function AddStaffModal({ open, onClose, roles, branches }: AddStaffModalProps) {
+export function EditStaffModal({ user, onClose, roles, branches }: EditStaffModalProps) {
   const queryClient = useQueryClient();
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [roleId, setRoleId] = useState('');
   const [branchId, setBranchId] = useState<string>('');
+  const [isActive, setIsActive] = useState(true);
   const [formError, setFormError] = useState<string | null>(null);
 
-  // Default the select to "Staff" (or the first role) until the user picks one.
-  const defaultRoleId =
-    roles.find((r) => r.name.toLowerCase() === 'staff')?.id ?? roles[0]?.id ?? '';
-  const selectedRoleId = roleId || defaultRoleId;
-
-  // Determine whether the chosen role is "Staff" (which should require a branch).
-  const selectedRole = roles.find((r) => r.id === selectedRoleId);
-  const isStaffRole = selectedRole?.name === 'Staff';
-
-  const activeBranches = branches.filter((b) => b.isActive);
+  // Reset the form whenever a different user is opened.
+  useEffect(() => {
+    if (user) {
+      setFirstName(user.firstName);
+      setLastName(user.lastName);
+      setEmail(user.email);
+      setRoleId(user.role.id);
+      setBranchId(user.branchId ?? '');
+      setIsActive(user.isActive);
+      setFormError(null);
+    }
+  }, [user]);
 
   const mutation = useMutation({
     mutationFn: async () => {
+      if (!user) return;
       const payload: Record<string, unknown> = {
         firstName,
         lastName,
         email,
-        password,
-        roleId: selectedRoleId,
+        roleId,
+        isActive,
+        // Send null to explicitly unassign the branch.
+        branchId: branchId === '' ? null : branchId,
       };
-      if (branchId) {
-        payload.branchId = branchId;
-      }
-      const response = await api.post<ApiEnvelope<unknown>>('/users', payload);
+      const response = await api.patch<ApiEnvelope<unknown>>(`/users/${user.id}`, payload);
       return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
-      handleClose();
+      onClose();
     },
     onError: (err) => {
-      setFormError(getApiErrorMessage(err, 'Could not create the staff account.'));
+      setFormError(getApiErrorMessage(err, 'Could not update the staff member.'));
     },
   });
-
-  function resetForm() {
-    setFirstName('');
-    setLastName('');
-    setEmail('');
-    setPassword('');
-    setConfirmPassword('');
-    setRoleId('');
-    setBranchId('');
-    setFormError(null);
-  }
-
-  function handleClose() {
-    resetForm();
-    onClose();
-  }
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
     setFormError(null);
-
-    if (password !== confirmPassword) {
-      setFormError('Passwords do not match.');
-      return;
-    }
-    if (!selectedRoleId) {
-      setFormError('Please choose a role.');
-      return;
-    }
-    if (isStaffRole && !branchId) {
-      setFormError('Please assign this Staff member to a branch.');
+    if (!firstName.trim() || !lastName.trim() || !email.trim()) {
+      setFormError('First name, last name and email are required.');
       return;
     }
     mutation.mutate();
   }
 
+  const title = user ? `Edit staff — ${user.firstName} ${user.lastName}` : 'Edit staff';
+  const activeBranches = branches.filter((b) => b.isActive);
+
   return (
-    <Modal open={open} onClose={handleClose} title="Add new staff">
+    <Modal open={!!user} onClose={onClose} title={title}>
       <form onSubmit={handleSubmit} className="space-y-3">
         <div className="grid grid-cols-2 gap-3">
           <div>
@@ -129,7 +108,6 @@ export function AddStaffModal({ open, onClose, roles, branches }: AddStaffModalP
             className={inputClass}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="name@gmail.com"
             required
           />
         </div>
@@ -138,10 +116,9 @@ export function AddStaffModal({ open, onClose, roles, branches }: AddStaffModalP
           <label className="mb-1 block text-sm font-medium text-slate-700">Role</label>
           <select
             className={inputClass}
-            value={selectedRoleId}
+            value={roleId}
             onChange={(e) => setRoleId(e.target.value)}
           >
-            {roles.length === 0 && <option value="">Loading roles…</option>}
             {roles.map((r) => (
               <option key={r.id} value={r.id}>
                 {r.name}
@@ -151,17 +128,13 @@ export function AddStaffModal({ open, onClose, roles, branches }: AddStaffModalP
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700">
-            Branch {isStaffRole && <span className="text-red-500">*</span>}
-          </label>
+          <label className="mb-1 block text-sm font-medium text-slate-700">Branch</label>
           <select
             className={inputClass}
             value={branchId}
             onChange={(e) => setBranchId(e.target.value)}
           >
-            <option value="">
-              {isStaffRole ? '— Select a branch —' : '— No branch (Owner/Admin) —'}
-            </option>
+            <option value="">— No branch (Owner/Admin) —</option>
             {activeBranches.map((b) => (
               <option key={b.id} value={b.id}>
                 {b.name}
@@ -169,35 +142,20 @@ export function AddStaffModal({ open, onClose, roles, branches }: AddStaffModalP
             ))}
           </select>
           <p className="mt-1 text-xs text-slate-400">
-            Staff can only sell from their assigned branch.
+            Staff are restricted to selling from their assigned branch. Owner/Admin can be left
+            unassigned.
           </p>
         </div>
 
-        <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700">Password</label>
+        <label className="flex items-center gap-2 text-sm text-slate-700">
           <input
-            type="password"
-            className={inputClass}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
+            type="checkbox"
+            checked={isActive}
+            onChange={(e) => setIsActive(e.target.checked)}
+            className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
           />
-        </div>
-
-        <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700">Confirm password</label>
-          <input
-            type="password"
-            className={inputClass}
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            required
-          />
-        </div>
-
-        <p className="text-xs text-slate-400">
-          Min 8 characters, with an uppercase, lowercase, a number and a special character (@$!%*?&).
-        </p>
+          Active (can log in)
+        </label>
 
         {formError && (
           <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{formError}</div>
@@ -206,7 +164,7 @@ export function AddStaffModal({ open, onClose, roles, branches }: AddStaffModalP
         <div className="flex justify-end gap-2 pt-2">
           <button
             type="button"
-            onClick={handleClose}
+            onClick={onClose}
             className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
           >
             Cancel
@@ -216,7 +174,7 @@ export function AddStaffModal({ open, onClose, roles, branches }: AddStaffModalP
             disabled={mutation.isPending}
             className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-60"
           >
-            {mutation.isPending ? 'Creating…' : 'Create staff'}
+            {mutation.isPending ? 'Saving…' : 'Save changes'}
           </button>
         </div>
       </form>

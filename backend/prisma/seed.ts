@@ -10,7 +10,7 @@ async function main() {
   console.log('🌱 Starting database seed...');
 
   // ----------------------------------------------------------------------
-  // 1. ROLES
+  // 1. ROLES (Owner, Admin, Staff)
   // ----------------------------------------------------------------------
   console.log('Creating roles...');
 
@@ -22,12 +22,10 @@ async function main() {
       description: 'Full system access',
       permissions: {
         users: ['create', 'read', 'update', 'delete'],
-        products: ['create', 'read', 'update', 'delete'],
-        inventory: ['create', 'read', 'update', 'delete'],
-        sales: ['create', 'read', 'update', 'void', 'refund'],
-        reports: ['read', 'export'],
-        settings: ['read', 'update'],
-        auditLogs: ['read'],
+        branches: ['create', 'read', 'update', 'delete'],
+        catalog: ['create', 'read', 'update', 'delete'],
+        sales: ['create', 'read', 'approve'],
+        reports: ['read'],
       },
     },
   });
@@ -37,13 +35,13 @@ async function main() {
     update: {},
     create: {
       name: 'Admin',
-      description: 'Administrative access',
+      description: 'Administrative access (same as Owner except cannot delete other Owners)',
       permissions: {
         users: ['create', 'read', 'update'],
-        products: ['create', 'read', 'update', 'delete'],
-        inventory: ['create', 'read', 'update'],
-        sales: ['create', 'read', 'update', 'void'],
-        reports: ['read', 'export'],
+        branches: ['create', 'read', 'update', 'delete'],
+        catalog: ['create', 'read', 'update', 'delete'],
+        sales: ['create', 'read', 'approve'],
+        reports: ['read'],
       },
     },
   });
@@ -53,10 +51,9 @@ async function main() {
     update: {},
     create: {
       name: 'Staff',
-      description: 'Basic staff access',
+      description: 'Branch-scoped sales access',
       permissions: {
-        products: ['read'],
-        inventory: ['read', 'receive'],
+        catalog: ['read'],
         sales: ['create', 'read'],
       },
     },
@@ -65,7 +62,23 @@ async function main() {
   console.log('✅ Roles created');
 
   // ----------------------------------------------------------------------
-  // 2. DEFAULT USERS
+  // 2. DEFAULT BRANCH
+  // ----------------------------------------------------------------------
+  console.log('Creating default branch...');
+
+  const mainBranch = await prisma.branch.upsert({
+    where: { name: 'Main Store' },
+    update: {},
+    create: {
+      name: 'Main Store',
+      address: 'Default branch — rename or delete and create your own.',
+    },
+  });
+
+  console.log('✅ Default branch created');
+
+  // ----------------------------------------------------------------------
+  // 3. DEFAULT USERS
   // ----------------------------------------------------------------------
   console.log('Creating default users...');
 
@@ -99,96 +112,26 @@ async function main() {
 
   await prisma.user.upsert({
     where: { email: 'staff@vapeshop.com' },
-    update: {},
+    update: { branchId: mainBranch.id },
     create: {
       email: 'staff@vapeshop.com',
       passwordHash,
       firstName: 'Store',
       lastName: 'Staff',
       roleId: staffRole.id,
+      branchId: mainBranch.id,
       mustChangePassword: true,
     },
   });
 
   console.log('✅ Default users created');
 
-  // ----------------------------------------------------------------------
-  // 3. PAYMENT METHODS
-  // ----------------------------------------------------------------------
-  console.log('Creating payment methods...');
-
-  const paymentMethods = [
-    { name: 'Cash', type: 'CASH' },
-    { name: 'Credit Card', type: 'CARD' },
-    { name: 'Debit Card', type: 'CARD' },
-    { name: 'Digital Wallet', type: 'DIGITAL' },
-  ];
-
-  for (const pm of paymentMethods) {
-    await prisma.paymentMethod.upsert({
-      where: { name: pm.name },
-      update: {},
-      create: pm,
-    });
-  }
-
-  console.log('✅ Payment methods created');
-
-  // ----------------------------------------------------------------------
-  // 4. CATEGORIES
-  // ----------------------------------------------------------------------
-  console.log('Creating categories...');
-
-  const categories = [
-    { name: 'E-Liquids', slug: 'e-liquids', displayOrder: 1 },
-    { name: 'Devices', slug: 'devices', displayOrder: 2 },
-    { name: 'Pods & Cartridges', slug: 'pods-cartridges', displayOrder: 3 },
-    { name: 'Coils', slug: 'coils', displayOrder: 4 },
-    { name: 'Accessories', slug: 'accessories', displayOrder: 5 },
-    { name: 'Disposables', slug: 'disposables', displayOrder: 6 },
-  ];
-
-  for (const cat of categories) {
-    await prisma.category.upsert({
-      where: { slug: cat.slug },
-      update: {},
-      create: cat,
-    });
-  }
-
-  console.log('✅ Categories created');
-
-  // ----------------------------------------------------------------------
-  // 5. SYSTEM SETTINGS
-  // ----------------------------------------------------------------------
-  console.log('Creating system settings...');
-
-  const settings = [
-    { key: 'shop.name', value: 'My Vape Shop', dataType: 'STRING', category: 'general', isPublic: true },
-    { key: 'shop.tax_rate', value: '8.5', dataType: 'NUMBER', category: 'general', isPublic: true },
-    { key: 'shop.currency', value: 'USD', dataType: 'STRING', category: 'general', isPublic: true },
-    { key: 'shop.minimum_age', value: '21', dataType: 'NUMBER', category: 'compliance', isPublic: true },
-    { key: 'inventory.low_stock_threshold', value: '10', dataType: 'NUMBER', category: 'inventory', isPublic: false },
-    { key: 'security.session_timeout', value: '900', dataType: 'NUMBER', category: 'security', isPublic: false },
-    { key: 'security.max_login_attempts', value: '5', dataType: 'NUMBER', category: 'security', isPublic: false },
-  ];
-
-  for (const setting of settings) {
-    await prisma.systemSetting.upsert({
-      where: { key: setting.key },
-      update: {},
-      create: setting,
-    });
-  }
-
-  console.log('✅ System settings created');
-
   console.log('🎉 Database seed completed successfully!');
   console.log('');
   console.log('Default login credentials:');
   console.log('  Owner: owner@vapeshop.com / ChangeMe123!');
   console.log('  Admin: admin@vapeshop.com / ChangeMe123!');
-  console.log('  Staff: staff@vapeshop.com / ChangeMe123!');
+  console.log('  Staff: staff@vapeshop.com / ChangeMe123! (assigned to "Main Store")');
   console.log('');
   console.log('⚠️  IMPORTANT: Change these passwords immediately!');
 }

@@ -7,6 +7,7 @@ import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
+import { BranchesModule } from './modules/branches/branches.module';
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
 
 @Module({
@@ -31,6 +32,7 @@ import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
     // Feature modules
     AuthModule,
     UsersModule,
+    BranchesModule,
   ],
   controllers: [AppController],
   providers: [
