@@ -11,6 +11,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { QueryUserDto } from './dto/query-user.dto';
 import * as bcrypt from 'bcrypt';
 import { ConfigService } from '@nestjs/config';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class UsersService {
@@ -39,7 +40,7 @@ export class UsersService {
     }
 
     // Hash password
-    const bcryptRounds = parseInt(this.config.get('BCRYPT_ROUNDS')) || 12;
+    const bcryptRounds = parseInt(this.config.get<string>('BCRYPT_ROUNDS') ?? '12', 10) || 12;
     const passwordHash = await bcrypt.hash(createUserDto.password, bcryptRounds);
 
     // Create user
@@ -80,7 +81,15 @@ export class UsersService {
   }
 
   async findAll(query: QueryUserDto) {
-    const { page, limit, search, roleId, isActive, sortBy, sortOrder } = query;
+    const {
+      page = 1,
+      limit = 20,
+      search,
+      roleId,
+      isActive,
+      sortBy = 'createdAt',
+      sortOrder = 'desc',
+    } = query;
     const skip = (page - 1) * limit;
 
     // Build where clause
@@ -237,7 +246,7 @@ export class UsersService {
           roleId: currentUser.roleId,
           isActive: currentUser.isActive,
         },
-        newValues: updateUserDto,
+        newValues: updateUserDto as unknown as Prisma.InputJsonValue,
       },
     });
 

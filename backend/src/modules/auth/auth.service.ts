@@ -203,7 +203,7 @@ export class AuthService {
     }
 
     // Hash new password
-    const bcryptRounds = parseInt(this.config.get('BCRYPT_ROUNDS')) || 12;
+    const bcryptRounds = parseInt(this.config.get<string>('BCRYPT_ROUNDS') ?? '12', 10) || 12;
     const newPasswordHash = await bcrypt.hash(newPassword, bcryptRounds);
 
     // Update password
@@ -234,6 +234,10 @@ export class AuthService {
       where: { id: userId },
     });
 
+    if (!user) {
+      return;
+    }
+
     const newFailedAttempts = user.failedLoginAttempts + 1;
     const isLocked = newFailedAttempts >= this.MAX_FAILED_ATTEMPTS;
 
@@ -263,7 +267,7 @@ export class AuthService {
   }
 
   private async createSession(userId: string, ipAddress: string, userAgent: string) {
-    const sessionTimeout = parseInt(this.config.get('SESSION_TIMEOUT')) || 900; // 15 minutes
+    const sessionTimeout = parseInt(this.config.get<string>('SESSION_TIMEOUT') ?? '900', 10) || 900; // 15 minutes
     const expiresAt = new Date(Date.now() + sessionTimeout * 1000);
 
     return this.prisma.session.create({

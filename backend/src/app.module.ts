@@ -20,8 +20,8 @@ import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
     // Rate limiting (values in milliseconds for ttl)
     ThrottlerModule.forRoot([
       {
-        ttl: (parseInt(process.env.RATE_LIMIT_TTL) || 60) * 1000,
-        limit: parseInt(process.env.RATE_LIMIT_MAX) || 100,
+        ttl: (parseInt(process.env.RATE_LIMIT_TTL ?? '60', 10) || 60) * 1000,
+        limit: parseInt(process.env.RATE_LIMIT_MAX ?? '100', 10) || 100,
       },
     ]),
 
