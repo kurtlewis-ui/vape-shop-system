@@ -14,9 +14,6 @@ import { JwtPayload, JwtRefreshPayload } from '../../common/interfaces/request-u
 
 @Injectable()
 export class AuthService {
-  private readonly MAX_FAILED_ATTEMPTS = 5;
-  private readonly LOCKOUT_DURATION_MINUTES = 15;
-
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
@@ -34,13 +31,6 @@ export class AuthService {
 
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
-    }
-
-    // Check if account is locked
-    if (user.isLocked) {
-      throw new ForbiddenException(
-        `Account locked due to multiple failed login attempts. Try again after ${this.LOCKOUT_DURATION_MINUTES} minutes.`,
-      );
     }
 
     // Check if account is active
@@ -238,32 +228,17 @@ export class AuthService {
       return;
     }
 
-    const newFailedAttempts = user.failedLoginAttempts + 1;
-    const isLocked = newFailedAttempts >= this.MAX_FAILED_ATTEMPTS;
-
+    // Track failed attempts for auditing only. The account is never locked,
+    // so login attempts are unlimited.
     await this.prisma.user.update({
       where: { id: userId },
       data: {
-        failedLoginAttempts: newFailedAttempts,
-        isLocked,
+        failedLoginAttempts: user.failedLoginAttempts + 1,
       },
     });
 
     // Create audit log for failed login
     await this.createAuditLog(userId, 'LOGIN_FAILED', null, null);
-
-    if (isLocked) {
-      // Schedule unlock after lockout duration
-      setTimeout(async () => {
-        await this.prisma.user.update({
-          where: { id: userId },
-          data: {
-            isLocked: false,
-            failedLoginAttempts: 0,
-          },
-        });
-      }, this.LOCKOUT_DURATION_MINUTES * 60 * 1000);
-    }
   }
 
   private async createSession(userId: string, ipAddress: string, userAgent: string) {
