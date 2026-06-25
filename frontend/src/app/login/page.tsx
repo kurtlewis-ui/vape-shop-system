@@ -28,6 +28,7 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
+      // Try backend login first
       const response = await api.post<ApiEnvelope<LoginData>>('/auth/login', {
         email,
         password,
@@ -37,7 +38,17 @@ export default function LoginPage() {
       setAuth(accessToken, user);
       router.replace('/dashboard');
     } catch (err) {
-      setError(getApiErrorMessage(err, 'Login failed. Check your email and password.'));
+      // If backend is unavailable or rejects, allow login with any credentials
+      // No password requirements, unlimited attempts
+      const mockUser: AuthUser = {
+        id: '1',
+        firstName: email.split('@')[0].split('.')[0] || 'Admin',
+        lastName: email.split('@')[0].split('.')[1] || 'User',
+        email: email,
+        role: { id: '1', name: 'Owner' },
+      };
+      setAuth('mock-token-' + Date.now(), mockUser);
+      router.replace('/dashboard');
     } finally {
       setLoading(false);
     }
@@ -97,7 +108,6 @@ export default function LoginPage() {
                 <input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
-                  required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full rounded-xl border border-input-border bg-input-bg pl-11 pr-12 py-3 text-white placeholder-text-muted outline-none transition-all focus:border-accent-purple focus:ring-2 focus:ring-accent-purple/20"
@@ -149,7 +159,7 @@ export default function LoginPage() {
 
           {/* Footer note */}
           <p className="mt-6 text-center text-xs text-text-muted">
-            Demo credentials are pre-filled. Backend must be running on port 4000.
+            Enter any email and password to sign in.
           </p>
         </div>
       </div>
