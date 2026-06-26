@@ -48,16 +48,14 @@ export default function LoginPage() {
       {/* Background gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-purple-900/30 via-transparent to-purple-800/20" />
 
-      <div className="relative w-full max-w-[480px]">
-        {/* Card */}
-        <div className="rounded-2xl bg-gray-900 border border-gray-800 p-8 shadow-2xl shadow-black/40">
-          {/* Circular logo template (400 x 400) — replace with your own <img> */}
-          <div className="mb-8 flex justify-center">
-            <div className="mx-auto aspect-square w-full max-w-[400px] flex items-center justify-center rounded-full border-2 border-dashed border-purple-500/40 bg-gray-800/50">
-              <span className="text-sm font-medium uppercase tracking-widest text-gray-500">Logo</span>
-            </div>
-          </div>
+      <div className="relative flex w-full max-w-[420px] flex-col items-center">
+        {/* Circular logo template (300 x 300) — outside the card. Replace with your own <img> */}
+        <div className="mb-8 flex aspect-square w-full max-w-[300px] items-center justify-center rounded-full border-2 border-dashed border-purple-500/40 bg-gray-800/50">
+          <span className="text-sm font-medium uppercase tracking-widest text-gray-500">Logo</span>
+        </div>
 
+        {/* Card */}
+        <div className="w-full rounded-2xl bg-gray-900 border border-gray-800 p-8 shadow-2xl shadow-black/40">
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Email Field */}
             <div>
