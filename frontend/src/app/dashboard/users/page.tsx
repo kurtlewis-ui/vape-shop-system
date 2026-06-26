@@ -6,8 +6,8 @@ import { Search, Plus, Pencil, Trash2, X, Eye, EyeOff, RefreshCw } from 'lucide-
 function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/30" onClick={onClose} />
-      <div className="relative bg-white rounded-lg shadow-xl w-full max-w-md mx-4 p-6 max-h-[90vh] overflow-y-auto">
+      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
+      <div className="relative bg-card-bg border border-card-border rounded-lg shadow-xl w-full max-w-md mx-4 p-6 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-bold text-text-primary">{title}</h3>
           <button onClick={onClose} className="text-text-muted hover:text-text-primary transition"><X size={20} /></button>
@@ -175,7 +175,7 @@ export default function UsersPage() {
     setFormData({ ...formData, password, confirmPassword: password });
   };
 
-  const UserForm = ({ isEdit }: { isEdit: boolean }) => (
+  const renderUserForm = (isEdit: boolean) => (
     <div className="space-y-4">
       <div className="grid grid-cols-3 gap-2">
         <div>
@@ -386,10 +386,10 @@ export default function UsersPage() {
             </thead>
             <tbody>
               {displayedUsers.map((user, idx) => (
-                <tr key={user.id} className="border-b border-card-border hover:bg-gray-50 transition">
+                <tr key={user.id} className="border-b border-card-border hover:bg-white/5 transition">
                   <td className="px-4 py-3 text-sm text-text-primary">{idx + 1}</td>
                   <td className="px-4 py-3">
-                    <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs text-text-muted">
+                    <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-xs text-text-muted">
                       {user.firstName[0]}{user.lastName[0]}
                     </div>
                   </td>
@@ -400,8 +400,8 @@ export default function UsersPage() {
                   <td className="px-4 py-3">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                       user.role === 'Admin'
-                        ? 'bg-blue-100 text-accent-blue'
-                        : 'bg-gray-100 text-text-secondary'
+                        ? 'bg-blue-500/20 text-blue-300'
+                        : 'bg-white/10 text-text-secondary'
                     }`}>
                       {user.role}
                     </span>
@@ -418,14 +418,14 @@ export default function UsersPage() {
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => handleEdit(user)}
-                        className="p-1.5 text-accent-blue hover:bg-blue-50 rounded transition"
+                        className="p-1.5 text-accent-blue hover:bg-blue-500/10 rounded transition"
                         title="Edit"
                       >
                         <Pencil size={15} />
                       </button>
                       <button
                         onClick={() => handleArchive(user)}
-                        className="p-1.5 text-accent-red hover:bg-red-50 rounded transition"
+                        className="p-1.5 text-accent-red hover:bg-red-500/10 rounded transition"
                         title="Archive"
                       >
                         <Trash2 size={15} />
@@ -446,14 +446,14 @@ export default function UsersPage() {
       {/* Add New User Modal */}
       {showAddModal && (
         <Modal title="Add New User" onClose={() => setShowAddModal(false)}>
-          <UserForm isEdit={false} />
+          {renderUserForm(false)}
         </Modal>
       )}
 
       {/* Edit User Modal */}
       {showEditModal && (
         <Modal title="Edit User" onClose={() => setShowEditModal(false)}>
-          <UserForm isEdit={true} />
+          {renderUserForm(true)}
         </Modal>
       )}
 
@@ -466,7 +466,7 @@ export default function UsersPage() {
           <div className="flex gap-3 justify-end">
             <button
               onClick={() => setShowArchiveModal(false)}
-              className="px-4 py-2 border border-input-border rounded-lg text-sm text-text-primary hover:bg-gray-50 transition"
+              className="px-4 py-2 border border-input-border rounded-lg text-sm text-text-primary hover:bg-white/5 transition"
             >
               Cancel
             </button>

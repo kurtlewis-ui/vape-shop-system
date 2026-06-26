@@ -5,38 +5,38 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Primary backgrounds (white/light theme)
-        'page-bg': '#f8f9fc',
-        'card-bg': '#ffffff',
-        'card-border': '#e5e7eb',
-        'table-header': '#6b1c2a',
+        // Primary backgrounds (dark purple theme)
+        'page-bg': '#0f0c1a',
+        'card-bg': '#1a1530',
+        'card-border': '#2e2745',
+        'table-header': '#9333ea',
         'table-header-text': '#ffffff',
         // Nav
-        'nav-bg': '#ffffff',
-        'nav-border': '#e5e7eb',
-        'nav-text': '#374151',
-        'nav-active': '#6b1c2a',
+        'nav-bg': '#15101f',
+        'nav-border': '#2e2745',
+        'nav-text': '#c4b5e0',
+        'nav-active': '#9333ea',
         // Text colors
-        'text-primary': '#1f2937',
-        'text-secondary': '#6b7280',
-        'text-muted': '#9ca3af',
-        'text-link': '#1e40af',
-        // Accent colors (from login page)
-        'accent-primary': '#6b1c2a',
-        'accent-purple': '#7c3aed',
-        'accent-purple-light': '#a78bfa',
-        'accent-green': '#16a34a',
-        'accent-orange': '#ea580c',
-        'accent-blue': '#2563eb',
-        'accent-red': '#dc2626',
+        'text-primary': '#f1edf9',
+        'text-secondary': '#b3a9c9',
+        'text-muted': '#8b8299',
+        'text-link': '#c084fc',
+        // Accent colors (purple to match login page)
+        'accent-primary': '#9333ea',
+        'accent-purple': '#a855f7',
+        'accent-purple-light': '#c084fc',
+        'accent-green': '#22c55e',
+        'accent-orange': '#fb923c',
+        'accent-blue': '#60a5fa',
+        'accent-red': '#f87171',
         // Buttons
-        'btn-primary': '#1e3a5f',
+        'btn-primary': '#9333ea',
         'btn-danger': '#ea580c',
-        'btn-success': '#16a34a',
+        'btn-success': '#22c55e',
         // Input/form colors
-        'input-bg': '#ffffff',
-        'input-border': '#d1d5db',
-        'input-focus': '#6b1c2a',
+        'input-bg': '#221b33',
+        'input-border': '#3b3450',
+        'input-focus': '#9333ea',
       },
       borderRadius: {
         xl: '12px',

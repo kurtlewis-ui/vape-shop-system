@@ -160,7 +160,7 @@ export function AddStaffModal({ open, onClose, roles, branches }: AddStaffModalP
             onChange={(e) => setBranchId(e.target.value)}
           >
             <option value="">
-              {isStaffRole ? '— Select a branch —' : '— No branch (Owner/Admin) —'}
+              {isStaffRole ? '— Select a branch —' : '— No branch (Admin) —'}
             </option>
             {activeBranches.map((b) => (
               <option key={b.id} value={b.id}>

@@ -178,11 +178,11 @@ export default function ProductsPage() {
               <tr><td colSpan={8} className="text-center py-8 text-text-muted">No products found.</td></tr>
             ) : (
               displayProducts.map((product, i) => (
-                <tr key={product.id} className="border-t border-card-border hover:bg-page-bg transition-colors align-top">
+                <tr key={product.id} className="border-t border-card-border hover:bg-white/5 transition-colors align-top">
                   <td className="px-3 py-3 text-sm text-accent-blue font-medium">{(entriesPerPage === 'All' ? 0 : (currentPage - 1) * (entriesPerPage as number)) + i + 1}</td>
                   <td className="px-3 py-3">
                     {product.image ? (
-                      <div className="w-10 h-10 rounded bg-gray-100 overflow-hidden"><img src={product.image} alt="" className="w-full h-full object-cover" /></div>
+                      <div className="w-10 h-10 rounded bg-white/10 overflow-hidden"><img src={product.image} alt="" className="w-full h-full object-cover" /></div>
                     ) : (
                       <span className="text-xs text-text-muted">No Image</span>
                     )}
@@ -225,7 +225,7 @@ export default function ProductsPage() {
           <div className="flex items-center gap-1">
             <button onClick={() => setCurrentPage(Math.max(1, currentPage - 1))} disabled={currentPage === 1} className="px-2 py-1 rounded border border-card-border disabled:opacity-50">Previous</button>
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-              <button key={p} onClick={() => setCurrentPage(p)} className={`px-2.5 py-1 rounded ${p === currentPage ? 'bg-accent-blue text-white' : 'border border-card-border hover:bg-page-bg'}`}>{p}</button>
+              <button key={p} onClick={() => setCurrentPage(p)} className={`px-2.5 py-1 rounded ${p === currentPage ? 'bg-accent-blue text-white' : 'border border-card-border hover:bg-white/5'}`}>{p}</button>
             ))}
             <button onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))} disabled={currentPage === totalPages} className="px-2 py-1 rounded border border-card-border disabled:opacity-50">Next</button>
           </div>
@@ -248,7 +248,7 @@ export default function ProductsPage() {
           <div className="space-y-4">
             <p className="text-sm text-text-primary">Are you sure you want to archive <strong>{archivingProduct.name}</strong>?</p>
             <div className="flex justify-end gap-2">
-              <button onClick={() => { setShowArchiveModal(false); setArchivingProduct(null); }} className="bg-gray-500 text-white px-4 py-2 rounded text-sm font-medium">Cancel</button>
+              <button onClick={() => { setShowArchiveModal(false); setArchivingProduct(null); }} className="bg-white/10 text-text-primary px-4 py-2 rounded text-sm font-medium">Cancel</button>
               <button onClick={handleArchive} className="bg-btn-danger text-white px-4 py-2 rounded text-sm font-medium">Yes, Archive</button>
             </div>
           </div>
@@ -264,7 +264,7 @@ export default function ProductsPage() {
               <input type="file" accept=".xlsx,.csv" className="w-full border border-input-border rounded px-3 py-2 text-sm bg-input-bg" />
             </div>
             <div className="flex justify-end gap-2">
-              <button onClick={() => setShowImportModal(false)} className="bg-gray-500 text-white px-4 py-2 rounded text-sm font-medium">Close</button>
+              <button onClick={() => setShowImportModal(false)} className="bg-white/10 text-text-primary px-4 py-2 rounded text-sm font-medium">Close</button>
               <button className="bg-btn-primary text-white px-4 py-2 rounded text-sm font-medium">Import Products</button>
             </div>
           </div>
@@ -280,7 +280,7 @@ export default function ProductsPage() {
               <input type="file" accept=".xlsx,.csv" className="w-full border border-input-border rounded px-3 py-2 text-sm bg-input-bg" />
             </div>
             <div className="flex justify-end gap-2">
-              <button onClick={() => setShowRestockModal(false)} className="bg-gray-500 text-white px-4 py-2 rounded text-sm font-medium">Close</button>
+              <button onClick={() => setShowRestockModal(false)} className="bg-white/10 text-text-primary px-4 py-2 rounded text-sm font-medium">Close</button>
               <button className="bg-btn-primary text-white px-4 py-2 rounded text-sm font-medium">Restock Products</button>
             </div>
           </div>
@@ -309,7 +309,7 @@ function ProductFormModal({ title, onClose, onSubmit, buttonLabel, buttonColor, 
           <div className="space-y-2">
             {shopsList.map((shop) => (
               <div key={shop} className="flex items-center gap-2">
-                <span className="text-xs font-medium text-accent-primary bg-gray-100 px-2 py-1.5 rounded min-w-[140px]">{shop}</span>
+                <span className="text-xs font-medium text-accent-primary bg-white/10 px-2 py-1.5 rounded min-w-[140px]">{shop}</span>
                 <input type="number" placeholder={`Quantity for ${shop}`} value={formQuantities[shop] || ''} onChange={(e) => setFormQuantities({ ...formQuantities, [shop]: e.target.value })} className="flex-1 border border-input-border rounded px-3 py-1.5 text-sm bg-input-bg focus:outline-none focus:border-input-focus" />
               </div>
             ))}
@@ -345,8 +345,8 @@ function ProductFormModal({ title, onClose, onSubmit, buttonLabel, buttonColor, 
 function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/30" onClick={onClose} />
-      <div className="relative bg-white rounded-lg shadow-xl w-full max-w-lg mx-4 p-6">
+      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
+      <div className="relative bg-card-bg border border-card-border rounded-lg shadow-xl w-full max-w-lg mx-4 p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-bold text-text-primary">{title}</h3>
           <button onClick={onClose} className="text-text-muted hover:text-text-primary transition"><X size={20} /></button>

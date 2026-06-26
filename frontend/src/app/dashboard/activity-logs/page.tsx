@@ -259,7 +259,7 @@ export default function ActivityLogsPage() {
                 </tr>
               ) : (
                 displayedLogs.map((log, idx) => (
-                  <tr key={log.id} className="border-b border-card-border hover:bg-gray-50 transition">
+                  <tr key={log.id} className="border-b border-card-border hover:bg-white/5 transition">
                     <td className="px-4 py-3 text-sm text-text-primary">{idx + 1}</td>
                     <td className="px-4 py-3">
                       <div>

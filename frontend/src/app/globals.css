@@ -7,8 +7,23 @@ body {
   height: 100%;
 }
 
+html {
+  /* Tell the browser to render native controls (select option lists,
+     date pickers, scrollbars) in dark mode so dropdowns stay readable. */
+  color-scheme: dark;
+}
+
 body {
   @apply bg-page-bg text-text-primary antialiased;
+}
+
+/* Native dropdown (select) option list — keep readable on dark theme.
+   Without this, some browsers render the option popup with a white
+   background, making light option text invisible. */
+select option,
+select optgroup {
+  background-color: #1a1530;
+  color: #f1edf9;
 }
 
 /* Scrollbar styling */
@@ -18,14 +33,14 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: #15101f;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #3b3450;
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #5b4f7a;
 }

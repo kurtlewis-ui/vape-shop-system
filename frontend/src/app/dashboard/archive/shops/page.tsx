@@ -6,8 +6,8 @@ import { Search, Undo2, Trash2, X } from 'lucide-react';
 function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/30" onClick={onClose} />
-      <div className="relative bg-white rounded-lg shadow-xl w-full max-w-md mx-4 p-6">
+      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
+      <div className="relative bg-card-bg border border-card-border rounded-lg shadow-xl w-full max-w-md mx-4 p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-bold text-text-primary">{title}</h3>
           <button onClick={onClose} className="text-text-muted hover:text-text-primary transition"><X size={20} /></button>
@@ -103,7 +103,7 @@ export default function ShopsArchivePage() {
                 </tr>
               ) : (
                 filteredShops.map((shop, idx) => (
-                  <tr key={shop.id} className="border-b border-card-border hover:bg-gray-50 transition">
+                  <tr key={shop.id} className="border-b border-card-border hover:bg-white/5 transition">
                     <td className="px-4 py-3 text-sm text-text-primary">{idx + 1}</td>
                     <td className="px-4 py-3 text-sm text-text-primary font-medium">{shop.name}</td>
                     <td className="px-4 py-3 text-sm text-text-secondary font-mono">{shop.slug}</td>
@@ -145,7 +145,7 @@ export default function ShopsArchivePage() {
           <div className="flex gap-3 justify-end">
             <button
               onClick={() => setShowDeleteModal(false)}
-              className="px-4 py-2 border border-input-border rounded-lg text-sm text-text-primary hover:bg-gray-50 transition"
+              className="px-4 py-2 border border-input-border rounded-lg text-sm text-text-primary hover:bg-white/5 transition"
             >
               Cancel
             </button>
