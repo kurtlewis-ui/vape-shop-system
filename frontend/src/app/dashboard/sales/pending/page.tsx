@@ -6,8 +6,8 @@ import { Search, Pencil, Trash2, X, CheckCircle, XCircle } from 'lucide-react';
 function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/30" onClick={onClose} />
-      <div className="relative bg-white rounded-lg shadow-xl w-full max-w-md mx-4 p-6 max-h-[90vh] overflow-y-auto">
+      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
+      <div className="relative bg-card-bg border border-card-border rounded-lg shadow-xl w-full max-w-md mx-4 p-6 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-bold text-text-primary">{title}</h3>
           <button onClick={onClose} className="text-text-muted hover:text-text-primary transition"><X size={20} /></button>
@@ -173,12 +173,12 @@ export default function SalesPendingPage() {
                 const groupTotal = groupItems.reduce((sum, item) => sum + item.subTotal, 0);
                 return (
                   <>{groupItems.map((item, idx) => (
-                    <tr key={item.id} className="border-b border-card-border hover:bg-gray-50 transition">
+                    <tr key={item.id} className="border-b border-card-border hover:bg-white/5 transition">
                       <td className="px-4 py-3 text-sm text-text-primary font-medium">
                         {idx === 0 ? `#${saleId}` : ''}
                       </td>
                       <td className="px-4 py-3">
-                        <div className="w-8 h-8 rounded bg-gray-200 flex items-center justify-center text-xs text-text-muted">
+                        <div className="w-8 h-8 rounded bg-white/10 flex items-center justify-center text-xs text-text-muted">
                           IMG
                         </div>
                       </td>
@@ -190,8 +190,8 @@ export default function SalesPendingPage() {
                       <td className="px-4 py-3">
                         <span className={`px-2 py-1 rounded text-xs font-medium ${
                           item.paymentMethod === 'Cash'
-                            ? 'bg-green-100 text-accent-green'
-                            : 'bg-blue-100 text-accent-blue'
+                            ? 'bg-green-500/20 text-green-300'
+                            : 'bg-blue-500/20 text-blue-300'
                         }`}>
                           {item.paymentMethod}
                         </span>
@@ -200,12 +200,12 @@ export default function SalesPendingPage() {
                       <td className="px-4 py-3 text-sm text-text-secondary">{item.dateCreated}</td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
-                          <button className="p-1.5 text-accent-blue hover:bg-blue-50 rounded transition" title="Edit">
+                          <button className="p-1.5 text-accent-blue hover:bg-blue-500/10 rounded transition" title="Edit">
                             <Pencil size={15} />
                           </button>
                           <button
                             onClick={() => handleDelete(item.id)}
-                            className="p-1.5 text-accent-red hover:bg-red-50 rounded transition"
+                            className="p-1.5 text-accent-red hover:bg-red-500/10 rounded transition"
                             title="Delete"
                           >
                             <Trash2 size={15} />

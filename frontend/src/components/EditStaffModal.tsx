@@ -134,7 +134,7 @@ export function EditStaffModal({ user, onClose, roles, branches }: EditStaffModa
             value={branchId}
             onChange={(e) => setBranchId(e.target.value)}
           >
-            <option value="">— No branch (Owner/Admin) —</option>
+            <option value="">— No branch (Admin) —</option>
             {activeBranches.map((b) => (
               <option key={b.id} value={b.id}>
                 {b.name}
@@ -142,7 +142,7 @@ export function EditStaffModal({ user, onClose, roles, branches }: EditStaffModa
             ))}
           </select>
           <p className="mt-1 text-xs text-slate-400">
-            Staff are restricted to selling from their assigned branch. Owner/Admin can be left
+            Staff are restricted to selling from their assigned branch. Admins can be left
             unassigned.
           </p>
         </div>

@@ -104,7 +104,7 @@ export default function ShopsPage() {
               <tr><td colSpan={4} className="text-center py-8 text-text-muted">No shops found.</td></tr>
             ) : (
               filteredShops.map((shop, i) => (
-                <tr key={shop.id} className="border-t border-card-border hover:bg-page-bg transition-colors">
+                <tr key={shop.id} className="border-t border-card-border hover:bg-white/5 transition-colors">
                   <td className="px-4 py-3 text-sm text-accent-blue font-medium">{i + 1}</td>
                   <td className="px-4 py-3 text-sm text-accent-blue font-medium">{shop.name}</td>
                   <td className="px-4 py-3 text-sm text-accent-blue">{shop.slug}</td>
@@ -185,7 +185,7 @@ export default function ShopsPage() {
               Are you sure you want to archive <strong>{archivingShop.name}</strong>?
             </p>
             <div className="flex justify-end gap-2">
-              <button onClick={() => { setShowArchiveModal(false); setArchivingShop(null); }} className="bg-gray-500 text-white px-4 py-2 rounded text-sm font-medium hover:opacity-90 transition">
+              <button onClick={() => { setShowArchiveModal(false); setArchivingShop(null); }} className="bg-white/10 text-text-primary px-4 py-2 rounded text-sm font-medium hover:opacity-90 transition">
                 Cancel
               </button>
               <button onClick={handleArchive} className="bg-btn-danger text-white px-4 py-2 rounded text-sm font-medium hover:opacity-90 transition">
@@ -202,8 +202,8 @@ export default function ShopsPage() {
 function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/30" onClick={onClose} />
-      <div className="relative bg-white rounded-lg shadow-xl w-full max-w-md mx-4 p-6">
+      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
+      <div className="relative bg-card-bg border border-card-border rounded-lg shadow-xl w-full max-w-md mx-4 p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-bold text-text-primary">{title}</h3>
           <button onClick={onClose} className="text-text-muted hover:text-text-primary transition">

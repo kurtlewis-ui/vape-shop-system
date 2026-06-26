@@ -1,43 +1,15 @@
 'use client';
 
 import { useState } from 'react';
-import { Store, Package, DollarSign, Users } from 'lucide-react';
-import {
-  AreaChart,
-  Area,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from 'recharts';
+import Link from 'next/link';
+import { Store, Package, DollarSign, Users, BarChart3 } from 'lucide-react';
 
-const salesData = [
-  { name: 'Monday', sales: 140000 },
-  { name: 'Tuesday', sales: 152000 },
-  { name: 'Wednesday', sales: 120000 },
-  { name: 'Thursday', sales: 60000 },
-  { name: 'Friday', sales: 8000 },
-  { name: 'Saturday', sales: 2000 },
-  { name: 'Sunday', sales: 1000 },
-];
-
-const topProducts = [
-  { name: 'Product A', sold: 1900, fill: '#3b82f6' },
-  { name: 'Product B', sold: 1220, fill: '#f97316' },
-  { name: 'Product C', sold: 700, fill: '#ef4444' },
-  { name: 'Product D', sold: 690, fill: '#14b8a6' },
-  { name: 'Product E', sold: 480, fill: '#84cc16' },
-  { name: 'Product F', sold: 450, fill: '#eab308' },
-  { name: 'Product G', sold: 400, fill: '#8b5cf6' },
-  { name: 'Product H', sold: 370, fill: '#ec4899' },
-  { name: 'Product I', sold: 310, fill: '#f472b6' },
-  { name: 'Product J', sold: 280, fill: '#a8a29e' },
-];
-
-const shops = ['All Shops', 'Main Branch', 'Downtown Branch', 'Mall Branch'];
+// Filters are kept for when the sales backend is wired up. There is no
+// hardcoded sales data here on purpose — the dashboard shows honest
+// zero/empty states until real data is available.
+const periodOptions = ['Daily', 'Weekly', 'Monthly', 'Last 10 Years'];
+const topPeriodOptions = ['All Time', 'This Week', 'This Month', 'This Year'];
+const shops = ['All Shops'];
 
 export default function DashboardPage() {
   const [salesPeriod, setSalesPeriod] = useState('Daily');
@@ -55,13 +27,44 @@ export default function DashboardPage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatsCard icon={<Store size={24} />} iconBg="bg-red-100" iconColor="text-accent-primary" value="12 Shops" />
-        <StatsCard icon={<Package size={24} />} iconBg="bg-red-100" iconColor="text-accent-primary" value="82 Products" subtitle="13 brands" />
-        <StatsCard icon={<DollarSign size={24} />} iconBg="bg-green-100" iconColor="text-accent-green" value="2 Pending Sales" subtitle="6420 Approved Sales" />
-        <StatsCard icon={<Users size={24} />} iconBg="bg-blue-100" iconColor="text-accent-blue" value="29 Staff/s" subtitle="5 Admin/s" />
+        <StatsCard
+          href="/dashboard/shops"
+          icon={<Store size={24} />}
+          iconBg="bg-accent-primary/15"
+          iconColor="text-accent-primary"
+          value="0"
+          label="Shops"
+        />
+        <StatsCard
+          href="/dashboard/products"
+          icon={<Package size={24} />}
+          iconBg="bg-accent-primary/15"
+          iconColor="text-accent-primary"
+          value="0"
+          label="Products"
+          subtitle="0 brands"
+        />
+        <StatsCard
+          href="/dashboard/sales/pending"
+          icon={<DollarSign size={24} />}
+          iconBg="bg-accent-green/15"
+          iconColor="text-accent-green"
+          value="0"
+          label="Pending Sales"
+          subtitle="0 Approved Sales"
+        />
+        <StatsCard
+          href="/dashboard/users"
+          icon={<Users size={24} />}
+          iconBg="bg-accent-blue/15"
+          iconColor="text-accent-blue"
+          value="0"
+          label="Staff"
+          subtitle="0 Admins"
+        />
       </div>
 
-      {/* Sales Overview Chart */}
+      {/* Sales Overview */}
       <div className="bg-card-bg border border-card-border rounded-lg p-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <h2 className="text-lg font-bold text-text-primary">Sales Overview</h2>
@@ -71,10 +74,9 @@ export default function DashboardPage() {
               onChange={(e) => setSalesPeriod(e.target.value)}
               className="border border-input-border rounded px-3 py-1.5 text-sm text-text-primary bg-input-bg focus:outline-none focus:border-input-focus"
             >
-              <option>Daily</option>
-              <option>Weekly</option>
-              <option>Monthly</option>
-              <option>Last 10 Years</option>
+              {periodOptions.map((p) => (
+                <option key={p}>{p}</option>
+              ))}
             </select>
             <input
               type="date"
@@ -91,23 +93,7 @@ export default function DashboardPage() {
             </select>
           </div>
         </div>
-        <div className="h-72">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={salesData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="name" stroke="#6b7280" fontSize={12} tickLine={false} axisLine={false} />
-              <YAxis stroke="#6b7280" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v) => v.toLocaleString()} />
-              <Tooltip formatter={(value) => [`₱${Number(value).toLocaleString()}`, 'Sales']} />
-              <defs>
-                <linearGradient id="salesGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <Area type="monotone" dataKey="sales" stroke="#3b82f6" fillOpacity={1} fill="url(#salesGradient)" strokeWidth={2} />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
+        <EmptyChart message="No sales data yet" />
       </div>
 
       {/* Top 10 Best-Selling Products */}
@@ -120,10 +106,9 @@ export default function DashboardPage() {
               onChange={(e) => setTopPeriod(e.target.value)}
               className="border border-input-border rounded px-3 py-1.5 text-sm text-text-primary bg-input-bg focus:outline-none focus:border-input-focus"
             >
-              <option>All Time</option>
-              <option>This Week</option>
-              <option>This Month</option>
-              <option>This Year</option>
+              {topPeriodOptions.map((p) => (
+                <option key={p}>{p}</option>
+              ))}
             </select>
             <select
               value={topShop}
@@ -136,48 +121,52 @@ export default function DashboardPage() {
             </select>
           </div>
         </div>
-        <div className="h-80">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={topProducts}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="name" stroke="#6b7280" fontSize={11} tickLine={false} axisLine={false} angle={-20} textAnchor="end" height={60} />
-              <YAxis stroke="#6b7280" fontSize={12} tickLine={false} axisLine={false} />
-              <Tooltip formatter={(value) => [Number(value).toLocaleString(), 'Units Sold']} />
-              <Bar dataKey="sold" radius={[4, 4, 0, 0]}>
-                {topProducts.map((entry, index) => (
-                  <rect key={index} fill={entry.fill} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+        <EmptyChart message="No product sales data yet" />
       </div>
     </div>
   );
 }
 
 function StatsCard({
+  href,
   icon,
   iconBg,
   iconColor,
   value,
+  label,
   subtitle,
 }: {
+  href: string;
   icon: React.ReactNode;
   iconBg: string;
   iconColor: string;
   value: string;
+  label: string;
   subtitle?: string;
 }) {
   return (
-    <div className="bg-card-bg border border-card-border rounded-lg p-4 flex items-center gap-4">
+    <Link
+      href={href}
+      className="group bg-card-bg border border-card-border rounded-lg p-4 flex items-center gap-4 transition-colors hover:border-accent-primary hover:bg-white/5"
+    >
       <div className={`flex h-12 w-12 items-center justify-center rounded-lg ${iconBg}`}>
         <span className={iconColor}>{icon}</span>
       </div>
       <div>
-        <p className="text-base font-bold text-text-primary">{value}</p>
-        {subtitle && <p className="text-xs text-text-secondary">{subtitle}</p>}
+        <p className="text-2xl font-bold text-text-primary leading-tight">{value}</p>
+        <p className="text-sm text-text-secondary">{label}</p>
+        {subtitle && <p className="text-xs text-text-muted">{subtitle}</p>}
       </div>
+    </Link>
+  );
+}
+
+function EmptyChart({ message }: { message: string }) {
+  return (
+    <div className="h-72 flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-card-border text-center">
+      <BarChart3 size={40} className="text-text-muted" />
+      <p className="text-sm font-medium text-text-secondary">{message}</p>
+      <p className="text-xs text-text-muted">Charts will populate once sales are recorded.</p>
     </div>
   );
 }

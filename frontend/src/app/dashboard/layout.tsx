@@ -127,7 +127,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         </div>
 
         {/* Navigation Bar */}
-        <nav className="flex items-center gap-1 px-6 pb-2 overflow-x-auto">
+        <nav className="flex items-center justify-center gap-1 px-6 pb-2 overflow-x-auto">
           {navItems.map((item) => {
             const active = isActive(item);
             const hasDropdown = !!item.dropdown;
@@ -164,12 +164,12 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
                 {/* Dropdown menu */}
                 {hasDropdown && openDropdown === item.label && (
-                  <div className="absolute top-full left-0 mt-1 bg-white border border-card-border rounded-lg shadow-lg py-1 z-50 min-w-[180px]">
+                  <div className="absolute top-full left-0 mt-1 bg-card-bg border border-card-border rounded-lg shadow-lg py-1 z-50 min-w-[180px]">
                     {item.dropdown!.map((sub) => (
                       <Link
                         key={sub.href}
                         href={sub.href}
-                        className="block px-4 py-2 text-sm text-text-primary hover:bg-page-bg transition-colors"
+                        className="block px-4 py-2 text-sm text-text-primary hover:bg-white/5 transition-colors"
                         onClick={() => setOpenDropdown(null)}
                       >
                         {sub.label}

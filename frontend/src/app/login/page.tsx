@@ -46,11 +46,11 @@ export default function LoginPage() {
   return (
     <main className="flex min-h-screen items-center justify-center px-4 bg-page-bg">
       {/* Background gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-purple-50 via-transparent to-blue-50" />
+      <div className="absolute inset-0 bg-gradient-to-br from-purple-900/40 via-transparent to-purple-700/20" />
 
       <div className="relative w-full max-w-md">
         {/* Card */}
-        <div className="rounded-2xl bg-white border border-gray-200 p-8 shadow-xl">
+        <div className="rounded-2xl bg-card-bg border border-card-border p-8 shadow-xl">
           {/* Logo / Branding */}
           <div className="mb-8 text-center">
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-purple-600 to-purple-400 shadow-lg shadow-purple-300/40">
@@ -59,19 +59,19 @@ export default function LoginPage() {
                 <line x1="7" y1="7" x2="7.01" y2="7"/>
               </svg>
             </div>
-            <h1 className="text-2xl font-bold text-gray-900">Sign In to Vape Shop</h1>
-            <p className="mt-2 text-sm text-gray-500">Inventory Management System</p>
+            <h1 className="text-2xl font-bold text-text-primary">Sign In to Vape Shop</h1>
+            <p className="mt-2 text-sm text-text-secondary">Inventory Management System</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Email Field */}
             <div>
-              <label htmlFor="email" className="mb-2 block text-sm font-medium text-gray-700">
+              <label htmlFor="email" className="mb-2 block text-sm font-medium text-text-secondary">
                 Email Address
               </label>
               <div className="relative">
                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
-                  <Mail size={18} className="text-gray-400" />
+                  <Mail size={18} className="text-text-muted" />
                 </div>
                 <input
                   id="email"
@@ -79,7 +79,7 @@ export default function LoginPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full rounded-xl border border-gray-300 bg-white pl-11 pr-4 py-3 text-gray-900 placeholder-gray-400 outline-none transition-all focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20"
+                  className="w-full rounded-xl border border-input-border bg-input-bg pl-11 pr-4 py-3 text-text-primary placeholder-text-muted outline-none transition-all focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20"
                   placeholder="you@example.com"
                 />
               </div>
@@ -87,12 +87,12 @@ export default function LoginPage() {
 
             {/* Password Field */}
             <div>
-              <label htmlFor="password" className="mb-2 block text-sm font-medium text-gray-700">
+              <label htmlFor="password" className="mb-2 block text-sm font-medium text-text-secondary">
                 Password
               </label>
               <div className="relative">
                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
-                  <Lock size={18} className="text-gray-400" />
+                  <Lock size={18} className="text-text-muted" />
                 </div>
                 <input
                   id="password"
@@ -100,13 +100,13 @@ export default function LoginPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full rounded-xl border border-gray-300 bg-white pl-11 pr-12 py-3 text-gray-900 placeholder-gray-400 outline-none transition-all focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20"
+                  className="w-full rounded-xl border border-input-border bg-input-bg pl-11 pr-12 py-3 text-text-primary placeholder-text-muted outline-none transition-all focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20"
                   placeholder="Enter your password"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-gray-400 hover:text-gray-700 transition-colors"
+                  className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-text-muted hover:text-text-primary transition-colors"
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
@@ -115,14 +115,14 @@ export default function LoginPage() {
 
             {/* Forgot Password Link */}
             <div className="flex items-center justify-end">
-              <button type="button" className="text-sm text-purple-600 hover:text-purple-700 transition-colors">
+              <button type="button" className="text-sm text-accent-purple-light hover:text-purple-300 transition-colors">
                 Forgot Password?
               </button>
             </div>
 
             {/* Error Message */}
             {error && (
-              <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-600">
+              <div className="rounded-xl bg-red-500/10 border border-red-500/30 px-4 py-3 text-sm text-red-300">
                 {error}
               </div>
             )}
@@ -148,7 +148,7 @@ export default function LoginPage() {
           </form>
 
           {/* Footer note */}
-          <p className="mt-6 text-center text-xs text-gray-400">
+          <p className="mt-6 text-center text-xs text-text-muted">
             Demo credentials are pre-filled. Sign in with a valid account.
           </p>
         </div>
