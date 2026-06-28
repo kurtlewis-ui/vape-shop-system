@@ -22,8 +22,8 @@ body {
    background, making light option text invisible. */
 select option,
 select optgroup {
-  background-color: #1a1530;
-  color: #f1edf9;
+  background-color: #272a32;
+  color: #e6e8ee;
 }
 
 /* Scrollbar styling */
@@ -33,14 +33,14 @@ select optgroup {
 }
 
 ::-webkit-scrollbar-track {
-  background: #15101f;
+  background: #191b21;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #3b3450;
+  background: #3a3e48;
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #5b4f7a;
+  background: #4f5563;
 }

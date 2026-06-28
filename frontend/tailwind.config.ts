@@ -5,38 +5,39 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Primary backgrounds (dark purple theme)
-        'page-bg': '#0f0c1a',
-        'card-bg': '#1a1530',
-        'card-border': '#2e2745',
-        'table-header': '#9333ea',
-        'table-header-text': '#ffffff',
+        // Primary backgrounds (soft, neutral dark — easy on the eyes)
+        'page-bg': '#191b21',
+        'card-bg': '#20232b',
+        'card-border': '#2d313b',
+        // Subtle table header instead of a bright, glaring fill
+        'table-header': '#272b34',
+        'table-header-text': '#cbd0db',
         // Nav
-        'nav-bg': '#15101f',
-        'nav-border': '#2e2745',
-        'nav-text': '#c4b5e0',
-        'nav-active': '#9333ea',
-        // Text colors
-        'text-primary': '#f1edf9',
-        'text-secondary': '#b3a9c9',
-        'text-muted': '#8b8299',
-        'text-link': '#c084fc',
-        // Accent colors (purple to match login page)
-        'accent-primary': '#9333ea',
-        'accent-purple': '#a855f7',
-        'accent-purple-light': '#c084fc',
-        'accent-green': '#22c55e',
-        'accent-orange': '#fb923c',
-        'accent-blue': '#60a5fa',
-        'accent-red': '#f87171',
+        'nav-bg': '#1c1f26',
+        'nav-border': '#2d313b',
+        'nav-text': '#aab0bd',
+        'nav-active': '#8e84d4',
+        // Text colors (off-white, not harsh pure white)
+        'text-primary': '#e6e8ee',
+        'text-secondary': '#a3a9b7',
+        'text-muted': '#737a89',
+        'text-link': '#a79ee8',
+        // Accent colors (muted/desaturated so nothing screams)
+        'accent-primary': '#8e84d4',
+        'accent-purple': '#9a90db',
+        'accent-purple-light': '#b4ace7',
+        'accent-green': '#6cbf95',
+        'accent-orange': '#d6a06a',
+        'accent-blue': '#79a3d4',
+        'accent-red': '#d98a8a',
         // Buttons
-        'btn-primary': '#9333ea',
-        'btn-danger': '#ea580c',
-        'btn-success': '#22c55e',
+        'btn-primary': '#8e84d4',
+        'btn-danger': '#c47b6b',
+        'btn-success': '#6cbf95',
         // Input/form colors
-        'input-bg': '#221b33',
-        'input-border': '#3b3450',
-        'input-focus': '#9333ea',
+        'input-bg': '#272a32',
+        'input-border': '#3a3e48',
+        'input-focus': '#8e84d4',
       },
       borderRadius: {
         xl: '12px',

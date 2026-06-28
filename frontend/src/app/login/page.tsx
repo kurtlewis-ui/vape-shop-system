@@ -44,27 +44,27 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center px-4 py-10 bg-gray-950">
+    <main className="flex min-h-screen items-center justify-center px-4 py-10 bg-page-bg">
       {/* Background gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-purple-900/30 via-transparent to-purple-800/20" />
+      <div className="absolute inset-0 bg-gradient-to-br from-accent-primary/10 via-transparent to-accent-primary/5" />
 
       <div className="relative flex w-full max-w-[420px] flex-col items-center">
         {/* Circular logo template (300 x 300) — outside the card. Replace with your own <img> */}
-        <div className="mb-8 flex aspect-square w-full max-w-[300px] items-center justify-center rounded-full border-2 border-dashed border-purple-500/40 bg-gray-800/50">
-          <span className="text-sm font-medium uppercase tracking-widest text-gray-500">Logo</span>
+        <div className="mb-8 flex aspect-square w-full max-w-[300px] items-center justify-center rounded-full border-2 border-dashed border-card-border bg-card-bg/60">
+          <span className="text-sm font-medium uppercase tracking-widest text-text-muted">Logo</span>
         </div>
 
         {/* Card */}
-        <div className="w-full rounded-2xl bg-gray-900 border border-gray-800 p-8 shadow-2xl shadow-black/40">
+        <div className="w-full rounded-2xl bg-card-bg border border-card-border p-8 shadow-xl shadow-black/30">
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Email Field */}
             <div>
-              <label htmlFor="email" className="mb-2 block text-sm font-medium text-gray-300">
+              <label htmlFor="email" className="mb-2 block text-sm font-medium text-text-secondary">
                 Email Address
               </label>
               <div className="relative">
                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
-                  <Mail size={18} className="text-gray-500" />
+                  <Mail size={18} className="text-text-muted" />
                 </div>
                 <input
                   id="email"
@@ -72,7 +72,7 @@ export default function LoginPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full rounded-xl border border-gray-700 bg-gray-800 pl-11 pr-4 py-3 text-white placeholder-gray-500 outline-none transition-all focus:border-purple-500 focus:ring-2 focus:ring-purple-500/30"
+                  className="w-full rounded-xl border border-input-border bg-input-bg pl-11 pr-4 py-3 text-text-primary placeholder-text-muted outline-none transition-all focus:border-input-focus focus:ring-2 focus:ring-input-focus/30"
                   placeholder="you@example.com"
                 />
               </div>
@@ -80,12 +80,12 @@ export default function LoginPage() {
 
             {/* Password Field */}
             <div>
-              <label htmlFor="password" className="mb-2 block text-sm font-medium text-gray-300">
+              <label htmlFor="password" className="mb-2 block text-sm font-medium text-text-secondary">
                 Password
               </label>
               <div className="relative">
                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
-                  <Lock size={18} className="text-gray-500" />
+                  <Lock size={18} className="text-text-muted" />
                 </div>
                 <input
                   id="password"
@@ -93,13 +93,13 @@ export default function LoginPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full rounded-xl border border-gray-700 bg-gray-800 pl-11 pr-12 py-3 text-white placeholder-gray-500 outline-none transition-all focus:border-purple-500 focus:ring-2 focus:ring-purple-500/30"
+                  className="w-full rounded-xl border border-input-border bg-input-bg pl-11 pr-12 py-3 text-text-primary placeholder-text-muted outline-none transition-all focus:border-input-focus focus:ring-2 focus:ring-input-focus/30"
                   placeholder="Enter your password"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-gray-500 hover:text-gray-300 transition-colors"
+                  className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-text-muted hover:text-text-secondary transition-colors"
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
@@ -117,7 +117,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-xl bg-gradient-to-r from-purple-800 to-purple-600 px-4 py-3.5 font-semibold text-white shadow-lg shadow-purple-900/40 transition-all hover:shadow-xl hover:shadow-purple-800/40 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60 disabled:shadow-none"
+              className="w-full rounded-xl bg-accent-primary px-4 py-3.5 font-semibold text-white shadow-lg shadow-black/20 transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60 disabled:shadow-none"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
