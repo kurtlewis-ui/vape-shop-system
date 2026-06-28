@@ -136,9 +136,9 @@ export default function UsersArchivePage() {
                     </td>
                     <td className="px-4 py-3 text-sm text-text-secondary">{user.email}</td>
                     <td className="px-4 py-3">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      <span className={`badge ${
                         user.role === 'Admin'
-                          ? 'bg-blue-500/20 text-blue-300'
+                          ? 'bg-accent-blue/15 text-accent-blue'
                           : 'bg-white/10 text-text-secondary'
                       }`}>
                         {user.role}
@@ -150,14 +150,14 @@ export default function UsersArchivePage() {
                       <div className="flex items-center gap-3">
                         <button
                           onClick={() => handleRestore(user)}
-                          className="flex items-center gap-1 text-accent-green hover:underline text-sm font-medium"
+                          className="inline-flex items-center gap-1 rounded-lg bg-accent-green/10 px-2.5 py-1 text-sm font-medium text-accent-green hover:bg-accent-green/20 transition-colors"
                           title="Restore"
                         >
                           <Undo2 size={14} /> Restore
                         </button>
                         <button
                           onClick={() => handleDeleteClick(user)}
-                          className="flex items-center gap-1 text-accent-red hover:underline text-sm font-medium"
+                          className="inline-flex items-center gap-1 rounded-lg bg-accent-red/10 px-2.5 py-1 text-sm font-medium text-accent-red hover:bg-accent-red/20 transition-colors"
                           title="Delete permanently"
                         >
                           <Trash2 size={14} /> Delete
