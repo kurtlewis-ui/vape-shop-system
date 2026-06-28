@@ -104,15 +104,15 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       <header className="sticky top-0 z-50 bg-nav-bg/80 backdrop-blur-md border-b border-nav-border shadow-sm shadow-black/20">
         {/* Top bar: Logo + User */}
         <div className="flex items-center justify-between px-6 py-3">
-          <Link href="/dashboard" className="flex items-center gap-2.5 group">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-accent-primary to-accent-pink text-sm font-extrabold text-white shadow-md shadow-accent-primary/30 transition-transform group-hover:scale-105">
+          <Link href="/dashboard" className="flex items-center gap-2.5">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent-primary text-sm font-bold text-white">
               V
             </span>
-            <span className="text-xl font-extrabold text-gradient">Vape Shop</span>
+            <span className="text-lg font-bold text-text-primary">Vape Shop</span>
           </Link>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-accent-primary to-accent-pink text-xs font-bold text-white shadow-sm shadow-accent-primary/30">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent-primary text-xs font-bold text-white">
                 {user?.firstName?.[0]}{user?.lastName?.[0]}
               </div>
               <span className="text-sm font-medium text-text-primary hidden sm:inline">

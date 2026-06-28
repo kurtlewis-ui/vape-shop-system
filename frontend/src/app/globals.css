@@ -15,11 +15,10 @@ html {
 
 body {
   @apply bg-page-bg text-text-primary antialiased;
-  /* Subtle colored glows give the dark UI depth and energy without
-     creating harsh, eye-straining contrast. */
+  /* One very faint glow keeps the dark UI from feeling flat, while
+     staying minimal and easy on the eyes. */
   background-image:
-    radial-gradient(1000px circle at 0% -10%, rgba(124, 108, 245, 0.1), transparent 45%),
-    radial-gradient(900px circle at 100% 0%, rgba(244, 114, 182, 0.07), transparent 42%);
+    radial-gradient(900px circle at 50% -15%, rgba(124, 108, 245, 0.06), transparent 45%);
   background-attachment: fixed;
 }
 
@@ -68,7 +67,7 @@ select optgroup {
 @layer components {
   /* Gradient primary call-to-action (Add / Save / Approve, etc.) */
   .btn-grad {
-    @apply bg-gradient-to-r from-accent-primary to-accent-pink text-white shadow-md shadow-accent-primary/20 transition-all hover:shadow-lg hover:shadow-accent-primary/30 hover:brightness-110 active:scale-[0.98];
+    @apply bg-gradient-to-r from-accent-primary to-accent-pink text-white shadow-sm transition-all hover:brightness-110 active:scale-[0.98];
   }
 
   /* Small square icon button used for row actions (edit / archive). */

@@ -21,8 +21,8 @@ export default function DashboardPage() {
     <div className="space-y-6">
       {/* Page Header */}
       <div>
-        <p className="text-sm text-accent-purple font-semibold uppercase tracking-wider">Overview</p>
-        <h1 className="text-3xl font-extrabold text-gradient">Dashboard</h1>
+        <p className="text-xs text-text-muted font-medium uppercase tracking-wider">Overview</p>
+        <h1 className="text-2xl font-bold text-text-primary">Dashboard</h1>
       </div>
 
       {/* Stats Cards */}
@@ -30,18 +30,16 @@ export default function DashboardPage() {
         <StatsCard
           href="/dashboard/shops"
           icon={<Store size={24} />}
-          iconBg="bg-gradient-to-br from-accent-primary/30 to-accent-primary/5 ring-1 ring-inset ring-accent-primary/20"
+          iconBg="bg-accent-primary/10"
           iconColor="text-accent-purple-light"
-          glow="hover:shadow-accent-primary/20"
           value="0"
           label="Shops"
         />
         <StatsCard
           href="/dashboard/products"
           icon={<Package size={24} />}
-          iconBg="bg-gradient-to-br from-accent-cyan/30 to-accent-cyan/5 ring-1 ring-inset ring-accent-cyan/20"
+          iconBg="bg-accent-cyan/10"
           iconColor="text-accent-cyan"
-          glow="hover:shadow-accent-cyan/20"
           value="0"
           label="Products"
           subtitle="0 brands"
@@ -49,9 +47,8 @@ export default function DashboardPage() {
         <StatsCard
           href="/dashboard/sales/pending"
           icon={<PhilippinePeso size={24} />}
-          iconBg="bg-gradient-to-br from-accent-green/30 to-accent-green/5 ring-1 ring-inset ring-accent-green/20"
+          iconBg="bg-accent-green/10"
           iconColor="text-accent-green"
-          glow="hover:shadow-accent-green/20"
           value="0"
           label="Pending Sales"
           subtitle="0 Approved Sales"
@@ -59,9 +56,8 @@ export default function DashboardPage() {
         <StatsCard
           href="/dashboard/users"
           icon={<Users size={24} />}
-          iconBg="bg-gradient-to-br from-accent-blue/30 to-accent-blue/5 ring-1 ring-inset ring-accent-blue/20"
+          iconBg="bg-accent-blue/10"
           iconColor="text-accent-blue"
-          glow="hover:shadow-accent-blue/20"
           value="0"
           label="Staff"
           subtitle="0 Admins"
@@ -136,7 +132,6 @@ function StatsCard({
   icon,
   iconBg,
   iconColor,
-  glow,
   value,
   label,
   subtitle,
@@ -145,7 +140,6 @@ function StatsCard({
   icon: React.ReactNode;
   iconBg: string;
   iconColor: string;
-  glow?: string;
   value: string;
   label: string;
   subtitle?: string;
@@ -153,15 +147,13 @@ function StatsCard({
   return (
     <Link
       href={href}
-      className={`group bg-card-bg border border-card-border rounded-xl p-4 flex items-center gap-4 transition-all duration-200 hover:-translate-y-1 hover:border-accent-primary/50 hover:shadow-xl ${glow ?? ''}`}
+      className="group bg-card-bg border border-card-border rounded-xl p-4 flex items-center gap-4 transition-colors duration-200 hover:border-accent-primary/40"
     >
-      <div
-        className={`flex h-12 w-12 items-center justify-center rounded-xl transition-transform duration-200 group-hover:scale-110 ${iconBg}`}
-      >
+      <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${iconBg}`}>
         <span className={iconColor}>{icon}</span>
       </div>
       <div>
-        <p className="text-2xl font-extrabold text-text-primary leading-tight">{value}</p>
+        <p className="text-2xl font-bold text-text-primary leading-tight">{value}</p>
         <p className="text-sm font-medium text-text-secondary">{label}</p>
         {subtitle && <p className="text-xs text-text-muted">{subtitle}</p>}
       </div>
@@ -171,11 +163,11 @@ function StatsCard({
 
 function EmptyChart({ message }: { message: string }) {
   return (
-    <div className="h-72 flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-card-border bg-gradient-to-b from-white/[0.02] to-transparent text-center">
-      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-accent-primary/20 to-accent-pink/10 ring-1 ring-inset ring-accent-primary/20">
-        <BarChart3 size={32} className="text-accent-purple-light" />
+    <div className="h-72 flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-card-border text-center">
+      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-accent-primary/10">
+        <BarChart3 size={28} className="text-accent-primary" />
       </div>
-      <p className="text-sm font-semibold text-text-secondary">{message}</p>
+      <p className="text-sm font-medium text-text-secondary">{message}</p>
       <p className="text-xs text-text-muted">Charts will populate once sales are recorded.</p>
     </div>
   );

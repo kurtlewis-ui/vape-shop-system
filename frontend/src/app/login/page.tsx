@@ -46,7 +46,7 @@ export default function LoginPage() {
   return (
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-10 bg-page-bg">
       {/* A single soft glow keeps the screen modern without visual clutter */}
-      <div className="pointer-events-none absolute -top-40 left-1/2 h-80 w-80 -translate-x-1/2 rounded-full bg-accent-primary/20 blur-3xl" />
+      <div className="pointer-events-none absolute -top-40 left-1/2 h-80 w-80 -translate-x-1/2 rounded-full bg-accent-primary/15 blur-3xl" />
 
       <div className="relative flex w-full max-w-[400px] flex-col items-center">
         {/* Circular logo template (300 x 300) — outside the card. Replace with your own <img> */}
@@ -117,7 +117,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-xl bg-gradient-to-r from-accent-primary to-accent-pink px-4 py-3.5 font-semibold text-white shadow-md shadow-accent-primary/25 transition-all hover:shadow-lg hover:shadow-accent-primary/35 hover:brightness-110 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 disabled:shadow-none"
+              className="w-full rounded-xl bg-gradient-to-r from-accent-primary to-accent-pink px-4 py-3.5 font-semibold text-white shadow-sm transition-all hover:brightness-110 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
