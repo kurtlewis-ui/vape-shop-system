@@ -9,7 +9,7 @@ import {
   Store,
   Package,
   Tag,
-  DollarSign,
+  PhilippinePeso,
   Users,
   ClipboardList,
   Archive,
@@ -32,7 +32,7 @@ const navItems: NavItem[] = [
   {
     label: 'Sales',
     href: '/dashboard/sales',
-    icon: <DollarSign size={16} />,
+    icon: <PhilippinePeso size={16} />,
     dropdown: [
       { label: 'Records', href: '/dashboard/sales/records' },
       { label: 'Pending', href: '/dashboard/sales/pending' },
@@ -127,7 +127,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         </div>
 
         {/* Navigation Bar */}
-        <nav className="flex items-center justify-center gap-1 px-6 pb-2 overflow-x-auto">
+        <nav className="flex flex-wrap items-center justify-center gap-1 px-6 pb-2">
           {navItems.map((item) => {
             const active = isActive(item);
             const hasDropdown = !!item.dropdown;
