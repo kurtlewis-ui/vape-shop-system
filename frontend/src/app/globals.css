@@ -15,16 +15,16 @@ html {
 
 body {
   @apply bg-page-bg text-text-primary antialiased;
-  /* One very faint glow keeps the dark UI from feeling flat, while
-     staying minimal and easy on the eyes. */
+  /* One very faint purple glow keeps the dark UI from feeling flat,
+     while staying minimal and easy on the eyes. */
   background-image:
-    radial-gradient(900px circle at 50% -15%, rgba(124, 108, 245, 0.06), transparent 45%);
+    radial-gradient(900px circle at 50% -15%, rgba(139, 125, 247, 0.05), transparent 45%);
   background-attachment: fixed;
 }
 
-/* Gradient text accent — used for headings/branding to add personality. */
+/* Gradient text accent — kept for optional use (purple shades only). */
 .text-gradient {
-  background-image: linear-gradient(120deg, #a78bfa 0%, #f472b6 100%);
+  background-image: linear-gradient(120deg, #a78bfa 0%, #8b7df7 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -36,8 +36,8 @@ body {
    background, making light option text invisible. */
 select option,
 select optgroup {
-  background-color: #23262f;
-  color: #eceef4;
+  background-color: #272a35;
+  color: #f1f3f8;
 }
 
 /* Scrollbar styling */
@@ -47,27 +47,41 @@ select optgroup {
 }
 
 ::-webkit-scrollbar-track {
-  background: #15161d;
+  background: #1b1d24;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #363a46;
+  background: #3b3f4d;
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #4a4f5e;
+  background: #4f5566;
 }
 
+/* ----------------------------------------------------------------------
+   Accessibility — a clear, consistent keyboard focus ring on every
+   interactive element (mouse clicks stay unaffected via :focus-visible).
+   ---------------------------------------------------------------------- */
+@layer base {
+  a:focus-visible,
+  button:focus-visible,
+  [role='button']:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    @apply outline-none ring-2 ring-accent-primary/60 ring-offset-2 ring-offset-page-bg;
+  }
+}
 
 /* ----------------------------------------------------------------------
    Reusable UI component classes — keep buttons, badges and action icons
-   visually consistent and engaging across every page.
+   visually consistent across every page.
    ---------------------------------------------------------------------- */
 @layer components {
-  /* Gradient primary call-to-action (Add / Save / Approve, etc.) */
+  /* Primary call-to-action — purple shades only. */
   .btn-grad {
-    @apply bg-gradient-to-r from-accent-primary to-accent-pink text-white shadow-sm transition-all hover:brightness-110 active:scale-[0.98];
+    @apply bg-gradient-to-r from-accent-primary to-accent-purple text-white shadow-sm transition-all hover:brightness-110 active:scale-[0.98];
   }
 
   /* Small square icon button used for row actions (edit / archive). */
@@ -77,6 +91,17 @@ select optgroup {
 
   /* Pill badge used for statuses, roles and tags. */
   .badge {
-    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold;
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold;
+  }
+
+  /* Neutral badge surface — keeps the UI calm; pair with .badge-dot for
+     an at-a-glance status cue. */
+  .badge-neutral {
+    @apply bg-surface-muted text-text-secondary border border-card-border;
+  }
+
+  /* Tiny status indicator dot used inside a neutral badge. */
+  .badge-dot {
+    @apply h-1.5 w-1.5 rounded-full;
   }
 }

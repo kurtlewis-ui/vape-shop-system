@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/lib/store';
@@ -59,6 +59,31 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const { user, accessToken, logout } = useAuthStore();
   const [mounted, setMounted] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const navRef = useRef<HTMLElement>(null);
+
+  // Close the open dropdown when clicking outside the nav or pressing Escape.
+  useEffect(() => {
+    if (!openDropdown) return;
+    const onPointerDown = (e: MouseEvent) => {
+      if (navRef.current && !navRef.current.contains(e.target as Node)) {
+        setOpenDropdown(null);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpenDropdown(null);
+    };
+    document.addEventListener('mousedown', onPointerDown);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onPointerDown);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [openDropdown]);
+
+  // Always close the dropdown when navigating to another page.
+  useEffect(() => {
+    setOpenDropdown(null);
+  }, [pathname]);
 
   useEffect(() => {
     setMounted(true);
@@ -123,6 +148,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               onClick={handleLogout}
               className="flex items-center gap-1 rounded-lg p-2 text-sm text-text-secondary hover:text-accent-red hover:bg-accent-red/10 transition-colors"
               title="Logout"
+              aria-label="Logout"
             >
               <LogOut size={16} />
             </button>
@@ -130,7 +156,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         </div>
 
         {/* Navigation Bar */}
-        <nav className="flex flex-wrap items-center justify-center gap-1 px-6 pb-2">
+        <nav ref={navRef} className="flex flex-wrap items-center justify-center gap-1 px-6 pb-2">
           {navItems.map((item) => {
             const active = isActive(item);
             const hasDropdown = !!item.dropdown;
@@ -140,7 +166,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 {hasDropdown ? (
                   <button
                     onClick={() => setOpenDropdown(openDropdown === item.label ? null : item.label)}
-                    onBlur={() => setTimeout(() => setOpenDropdown(null), 200)}
+                    aria-haspopup="true"
+                    aria-expanded={openDropdown === item.label}
                     className={`flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium rounded-lg transition-all whitespace-nowrap ${
                       active
                         ? 'bg-accent-primary/15 text-accent-purple-light shadow-sm shadow-accent-primary/10'

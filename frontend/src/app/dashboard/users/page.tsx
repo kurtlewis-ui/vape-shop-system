@@ -50,6 +50,8 @@ export default function UsersPage() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showArchiveModal, setShowArchiveModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [formError, setFormError] = useState<string | null>(null);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -73,7 +75,10 @@ export default function UsersPage() {
       u.email.toLowerCase().includes(search.toLowerCase())
   );
 
-  const displayedUsers = entriesPerPage === 'All' ? filteredUsers : filteredUsers.slice(0, entriesPerPage);
+  const totalPages = entriesPerPage === 'All' ? 1 : Math.max(1, Math.ceil(filteredUsers.length / entriesPerPage));
+  const pageStart = entriesPerPage === 'All' ? 0 : (currentPage - 1) * entriesPerPage;
+  const displayedUsers =
+    entriesPerPage === 'All' ? filteredUsers : filteredUsers.slice(pageStart, pageStart + entriesPerPage);
 
   const resetForm = () => {
     setFormData({
@@ -90,6 +95,7 @@ export default function UsersPage() {
     });
     setShowPassword(false);
     setShowConfirmPassword(false);
+    setFormError(null);
   };
 
   const handleAdd = () => {
@@ -99,6 +105,7 @@ export default function UsersPage() {
 
   const handleEdit = (user: User) => {
     setSelectedUser(user);
+    setFormError(null);
     setFormData({
       firstName: user.firstName,
       middleInitial: user.middleInitial,
@@ -128,6 +135,15 @@ export default function UsersPage() {
   };
 
   const handleSaveUser = () => {
+    if (!formData.firstName.trim() || !formData.lastName.trim() || !formData.email.trim()) {
+      setFormError('First name, last name and email are required.');
+      return;
+    }
+    if ((formData.password || formData.confirmPassword) && formData.password !== formData.confirmPassword) {
+      setFormError('Passwords do not match.');
+      return;
+    }
+    setFormError(null);
     const newUser: User = {
       id: Math.max(...users.map((u) => u.id)) + 1,
       firstName: formData.firstName,
@@ -144,6 +160,15 @@ export default function UsersPage() {
   };
 
   const handleUpdateUser = () => {
+    if (!formData.firstName.trim() || !formData.lastName.trim() || !formData.email.trim()) {
+      setFormError('First name, last name and email are required.');
+      return;
+    }
+    if ((formData.password || formData.confirmPassword) && formData.password !== formData.confirmPassword) {
+      setFormError('Passwords do not match.');
+      return;
+    }
+    setFormError(null);
     if (selectedUser) {
       setUsers(
         users.map((u) =>
@@ -321,6 +346,10 @@ export default function UsersPage() {
         )}
       </div>
 
+      {formError && (
+        <div className="rounded-lg bg-accent-red/10 border border-accent-red/30 px-3 py-2 text-sm text-accent-red">{formError}</div>
+      )}
+
       <button
         onClick={isEdit ? handleUpdateUser : handleSaveUser}
         className="w-full btn-grad py-2.5 rounded-lg font-medium"
@@ -348,7 +377,7 @@ export default function UsersPage() {
             <label className="text-sm text-text-secondary">Show</label>
             <select
               value={entriesPerPage}
-              onChange={(e) => setEntriesPerPage(e.target.value === 'All' ? 'All' : Number(e.target.value))}
+              onChange={(e) => { setEntriesPerPage(e.target.value === 'All' ? 'All' : Number(e.target.value)); setCurrentPage(1); }}
               className="px-2 py-1 border border-input-border rounded text-sm bg-input-bg focus:outline-none focus:ring-2 focus:ring-input-focus"
             >
               {[5, 10, 25, 50, 100].map((n) => (
@@ -364,7 +393,7 @@ export default function UsersPage() {
               type="text"
               placeholder="Search users..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
               className="pl-9 pr-4 py-2 border border-input-border rounded-lg bg-input-bg text-sm focus:outline-none focus:ring-2 focus:ring-input-focus w-64"
             />
           </div>
@@ -387,7 +416,7 @@ export default function UsersPage() {
             <tbody>
               {displayedUsers.map((user, idx) => (
                 <tr key={user.id} className="border-b border-card-border hover:bg-white/5 transition">
-                  <td className="px-4 py-3 text-sm text-text-primary">{idx + 1}</td>
+                  <td className="px-4 py-3 text-sm text-text-primary">{pageStart + idx + 1}</td>
                   <td className="px-4 py-3">
                     <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-xs text-text-muted">
                       {user.firstName[0]}{user.lastName[0]}
@@ -398,19 +427,12 @@ export default function UsersPage() {
                   </td>
                   <td className="px-4 py-3 text-sm text-text-secondary">{user.email}</td>
                   <td className="px-4 py-3">
-                    <span className={`badge ${
-                      user.role === 'Admin'
-                        ? 'bg-accent-blue/15 text-accent-blue'
-                        : 'bg-white/10 text-text-secondary'
-                    }`}>
-                      {user.role}
-                    </span>
+                    <span className="badge badge-neutral">{user.role}</span>
                   </td>
                   <td className="px-4 py-3 text-sm text-text-secondary">{user.shop}</td>
                   <td className="px-4 py-3">
-                    <span className={`badge ${
-                      user.status === 'Active' ? 'bg-accent-green/15 text-accent-green' : 'bg-accent-red/15 text-accent-red'
-                    }`}>
+                    <span className="badge badge-neutral">
+                      <span className={`badge-dot ${user.status === 'Active' ? 'bg-accent-green' : 'bg-accent-red'}`} />
                       {user.status}
                     </span>
                   </td>
@@ -418,15 +440,17 @@ export default function UsersPage() {
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => handleEdit(user)}
-                        className="p-1.5 text-accent-blue hover:bg-blue-500/10 rounded transition"
+                        className="p-1.5 text-accent-blue hover:bg-accent-blue/10 rounded-lg transition"
                         title="Edit"
+                        aria-label={`Edit ${user.firstName} ${user.lastName}`}
                       >
                         <Pencil size={15} />
                       </button>
                       <button
                         onClick={() => handleArchive(user)}
-                        className="p-1.5 text-accent-red hover:bg-red-500/10 rounded transition"
+                        className="p-1.5 text-accent-red hover:bg-accent-red/10 rounded-lg transition"
                         title="Archive"
+                        aria-label={`Archive ${user.firstName} ${user.lastName}`}
                       >
                         <Trash2 size={15} />
                       </button>
@@ -438,8 +462,39 @@ export default function UsersPage() {
           </table>
         </div>
 
-        <div className="p-4 text-sm text-text-secondary">
-          Showing 1 to {displayedUsers.length} of {filteredUsers.length} entries
+        <div className="p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-sm text-text-secondary">
+          <span>
+            Showing {filteredUsers.length === 0 ? 0 : pageStart + 1} to {pageStart + displayedUsers.length} of {filteredUsers.length} entries
+          </span>
+          {totalPages > 1 && (
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="px-2.5 py-1 rounded-lg border border-card-border disabled:opacity-50 hover:bg-white/5 transition-colors"
+              >
+                Previous
+              </button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                <button
+                  key={p}
+                  onClick={() => setCurrentPage(p)}
+                  className={`px-2.5 py-1 rounded-lg transition-colors ${
+                    p === currentPage ? 'bg-btn-primary text-white' : 'border border-card-border hover:bg-white/5'
+                  }`}
+                >
+                  {p}
+                </button>
+              ))}
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="px-2.5 py-1 rounded-lg border border-card-border disabled:opacity-50 hover:bg-white/5 transition-colors"
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

@@ -28,13 +28,15 @@ export default function ShopsPage() {
   const [editingShop, setEditingShop] = useState<Shop | null>(null);
   const [archivingShop, setArchivingShop] = useState<Shop | null>(null);
   const [newName, setNewName] = useState('');
+  const [formError, setFormError] = useState<string | null>(null);
 
   const filteredShops = shops.filter(
     (s) => s.name.toLowerCase().includes(search.toLowerCase()) || s.slug.includes(search.toLowerCase())
   );
 
   function handleAdd() {
-    if (!newName.trim()) return;
+    if (!newName.trim()) { setFormError('Shop name is required.'); return; }
+    setFormError(null);
     const newShop: Shop = {
       id: Date.now(),
       name: newName.trim().toUpperCase(),
@@ -46,7 +48,8 @@ export default function ShopsPage() {
   }
 
   function handleEdit() {
-    if (!editingShop || !newName.trim()) return;
+    if (!editingShop || !newName.trim()) { setFormError('Shop name is required.'); return; }
+    setFormError(null);
     setShops(shops.map((s) => (s.id === editingShop.id ? { ...s, name: newName.trim().toUpperCase(), slug: generateSlug(newName.trim()) } : s)));
     setNewName('');
     setEditingShop(null);
@@ -66,7 +69,7 @@ export default function ShopsPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-text-primary">Shops</h1>
         <button
-          onClick={() => { setNewName(''); setShowAddModal(true); }}
+          onClick={() => { setNewName(''); setFormError(null); setShowAddModal(true); }}
           className="flex items-center gap-2 btn-grad px-4 py-2 rounded-lg text-sm font-medium"
         >
           <Plus size={16} />
@@ -75,17 +78,15 @@ export default function ShopsPage() {
       </div>
 
       {/* Search */}
-      <div className="flex">
+      <div className="relative max-w-sm">
+        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
         <input
           type="text"
           placeholder="Search..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 border border-input-border rounded-l px-4 py-2 text-sm text-text-primary bg-input-bg focus:outline-none focus:border-input-focus"
+          className="w-full border border-input-border rounded-lg pl-9 pr-4 py-2 text-sm text-text-primary bg-input-bg focus:outline-none focus:border-input-focus"
         />
-        <button className="bg-btn-primary text-white px-4 py-2 rounded-r">
-          <Search size={16} />
-        </button>
       </div>
 
       {/* Table */}
@@ -111,7 +112,7 @@ export default function ShopsPage() {
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-2">
                       <button
-                        onClick={() => { setEditingShop(shop); setNewName(shop.name); setShowEditModal(true); }}
+                        onClick={() => { setEditingShop(shop); setNewName(shop.name); setFormError(null); setShowEditModal(true); }}
                         className="icon-btn text-accent-blue hover:bg-accent-blue/10"
                         title="Edit"
                       >
@@ -146,6 +147,9 @@ export default function ShopsPage() {
                 className="w-full border border-input-border rounded px-3 py-2 text-sm text-text-primary bg-input-bg focus:outline-none focus:border-input-focus"
               />
             </div>
+            {formError && (
+              <p className="text-sm text-accent-red">{formError}</p>
+            )}
             <div className="flex justify-end">
               <button onClick={handleAdd} className="btn-grad px-4 py-2 rounded-lg text-sm font-medium">
                 Save Shop
@@ -168,6 +172,9 @@ export default function ShopsPage() {
                 className="w-full border border-input-border rounded px-3 py-2 text-sm text-text-primary bg-input-bg focus:outline-none focus:border-input-focus"
               />
             </div>
+            {formError && (
+              <p className="text-sm text-accent-red">{formError}</p>
+            )}
             <div className="flex justify-end">
               <button onClick={handleEdit} className="btn-grad px-4 py-2 rounded-lg text-sm font-medium">
                 Save Shop

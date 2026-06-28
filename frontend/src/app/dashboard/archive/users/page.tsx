@@ -136,13 +136,7 @@ export default function UsersArchivePage() {
                     </td>
                     <td className="px-4 py-3 text-sm text-text-secondary">{user.email}</td>
                     <td className="px-4 py-3">
-                      <span className={`badge ${
-                        user.role === 'Admin'
-                          ? 'bg-accent-blue/15 text-accent-blue'
-                          : 'bg-white/10 text-text-secondary'
-                      }`}>
-                        {user.role}
-                      </span>
+                      <span className="badge badge-neutral">{user.role}</span>
                     </td>
                     <td className="px-4 py-3 text-sm text-text-secondary">{user.shop}</td>
                     <td className="px-4 py-3 text-sm text-text-secondary">{user.archivedAt}</td>
