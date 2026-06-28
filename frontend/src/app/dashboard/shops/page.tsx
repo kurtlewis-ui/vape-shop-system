@@ -67,7 +67,7 @@ export default function ShopsPage() {
         <h1 className="text-2xl font-bold text-text-primary">Shops</h1>
         <button
           onClick={() => { setNewName(''); setShowAddModal(true); }}
-          className="flex items-center gap-2 bg-btn-primary text-white px-4 py-2 rounded text-sm font-medium hover:opacity-90 transition"
+          className="flex items-center gap-2 btn-grad px-4 py-2 rounded-lg text-sm font-medium"
         >
           <Plus size={16} />
           Add new Shop
@@ -112,14 +112,14 @@ export default function ShopsPage() {
                     <div className="flex items-center justify-end gap-2">
                       <button
                         onClick={() => { setEditingShop(shop); setNewName(shop.name); setShowEditModal(true); }}
-                        className="text-accent-blue hover:text-accent-blue/80 transition"
+                        className="icon-btn text-accent-blue hover:bg-accent-blue/10"
                         title="Edit"
                       >
                         <Pencil size={16} />
                       </button>
                       <button
                         onClick={() => { setArchivingShop(shop); setShowArchiveModal(true); }}
-                        className="text-btn-danger hover:text-btn-danger/80 transition"
+                        className="icon-btn text-accent-red hover:bg-accent-red/10"
                         title="Archive"
                       >
                         <Trash2 size={16} />
@@ -147,7 +147,7 @@ export default function ShopsPage() {
               />
             </div>
             <div className="flex justify-end">
-              <button onClick={handleAdd} className="bg-btn-primary text-white px-4 py-2 rounded text-sm font-medium hover:opacity-90 transition">
+              <button onClick={handleAdd} className="btn-grad px-4 py-2 rounded-lg text-sm font-medium">
                 Save Shop
               </button>
             </div>
@@ -169,7 +169,7 @@ export default function ShopsPage() {
               />
             </div>
             <div className="flex justify-end">
-              <button onClick={handleEdit} className="bg-btn-primary text-white px-4 py-2 rounded text-sm font-medium hover:opacity-90 transition">
+              <button onClick={handleEdit} className="btn-grad px-4 py-2 rounded-lg text-sm font-medium">
                 Save Shop
               </button>
             </div>

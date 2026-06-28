@@ -68,7 +68,7 @@ export default function BrandsPage() {
         <h1 className="text-2xl font-bold text-text-primary">Brands</h1>
         <button
           onClick={() => { setFormName(''); setShowAddModal(true); }}
-          className="flex items-center gap-2 bg-btn-primary text-white px-4 py-2 rounded text-sm font-medium hover:opacity-90 transition"
+          className="flex items-center gap-2 btn-grad px-4 py-2 rounded-lg text-sm font-medium"
         >
           <Plus size={16} />
           Add new Brand
@@ -121,13 +121,13 @@ export default function BrandsPage() {
                     <div className="flex items-center justify-end gap-2">
                       <button
                         onClick={() => { setEditingBrand(brand); setFormName(brand.name); setShowEditModal(true); }}
-                        className="text-accent-blue hover:text-accent-blue/80 transition"
+                        className="icon-btn text-accent-blue hover:bg-accent-blue/10"
                       >
                         <Pencil size={16} />
                       </button>
                       <button
                         onClick={() => { setArchivingBrand(brand); setShowArchiveModal(true); }}
-                        className="text-btn-danger hover:text-btn-danger/80 transition"
+                        className="icon-btn text-accent-red hover:bg-accent-red/10"
                       >
                         <Trash2 size={16} />
                       </button>
@@ -153,7 +153,7 @@ export default function BrandsPage() {
               <input type="file" accept="image/*" className="w-full border border-input-border rounded px-3 py-2 text-sm text-text-primary bg-input-bg" />
             </div>
             <div className="flex justify-end">
-              <button onClick={handleAdd} className="bg-btn-primary text-white px-4 py-2 rounded text-sm font-medium hover:opacity-90 transition">Save Brand</button>
+              <button onClick={handleAdd} className="btn-grad px-4 py-2 rounded-lg text-sm font-medium">Save Brand</button>
             </div>
           </div>
         </Modal>
@@ -172,7 +172,7 @@ export default function BrandsPage() {
               <input type="file" accept="image/*" className="w-full border border-input-border rounded px-3 py-2 text-sm text-text-primary bg-input-bg" />
             </div>
             <div className="flex justify-end">
-              <button onClick={handleEdit} className="bg-btn-primary text-white px-4 py-2 rounded text-sm font-medium hover:opacity-90 transition">Save Brand</button>
+              <button onClick={handleEdit} className="btn-grad px-4 py-2 rounded-lg text-sm font-medium">Save Brand</button>
             </div>
           </div>
         </Modal>

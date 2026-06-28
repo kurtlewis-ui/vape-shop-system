@@ -88,7 +88,7 @@ export default function SalesPendingPage() {
         <div className="flex items-center gap-2">
           <button
             onClick={handleApproveAll}
-            className="flex items-center gap-1.5 px-4 py-2 bg-btn-primary text-white rounded-lg text-sm font-medium hover:opacity-90 transition"
+            className="flex items-center gap-1.5 btn-grad px-4 py-2 rounded-lg text-sm font-medium"
           >
             <CheckCircle size={16} /> Approve All
           </button>
@@ -188,10 +188,10 @@ export default function SalesPendingPage() {
                       <td className="px-4 py-3 text-sm text-text-primary">&#8369;{item.sellingPrice.toLocaleString()}</td>
                       <td className="px-4 py-3 text-sm text-text-primary font-medium">&#8369;{item.subTotal.toLocaleString()}</td>
                       <td className="px-4 py-3">
-                        <span className={`px-2 py-1 rounded text-xs font-medium ${
+                        <span className={`badge ${
                           item.paymentMethod === 'Cash'
-                            ? 'bg-green-500/20 text-green-300'
-                            : 'bg-blue-500/20 text-blue-300'
+                            ? 'bg-accent-green/15 text-accent-green'
+                            : 'bg-accent-blue/15 text-accent-blue'
                         }`}>
                           {item.paymentMethod}
                         </span>

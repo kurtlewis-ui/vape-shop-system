@@ -59,3 +59,25 @@ select optgroup {
 ::-webkit-scrollbar-thumb:hover {
   background: #4a4f5e;
 }
+
+
+/* ----------------------------------------------------------------------
+   Reusable UI component classes — keep buttons, badges and action icons
+   visually consistent and engaging across every page.
+   ---------------------------------------------------------------------- */
+@layer components {
+  /* Gradient primary call-to-action (Add / Save / Approve, etc.) */
+  .btn-grad {
+    @apply bg-gradient-to-r from-accent-primary to-accent-pink text-white shadow-md shadow-accent-primary/20 transition-all hover:shadow-lg hover:shadow-accent-primary/30 hover:brightness-110 active:scale-[0.98];
+  }
+
+  /* Small square icon button used for row actions (edit / archive). */
+  .icon-btn {
+    @apply inline-flex items-center justify-center rounded-lg p-1.5 transition-colors;
+  }
+
+  /* Pill badge used for statuses, roles and tags. */
+  .badge {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold;
+  }
+}

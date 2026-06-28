@@ -117,13 +117,13 @@ export default function ProductsPage() {
       <div className="flex items-center justify-between flex-wrap gap-4">
         <h1 className="text-2xl font-bold text-text-primary">Products</h1>
         <div className="flex items-center gap-2 flex-wrap">
-          <button onClick={() => setShowImportModal(true)} className="flex items-center gap-1 bg-btn-danger text-white px-3 py-2 rounded text-sm font-medium hover:opacity-90 transition">
+          <button onClick={() => setShowImportModal(true)} className="flex items-center gap-1 bg-btn-danger text-white px-3 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition">
             <Upload size={14} /> Import Products
           </button>
-          <button className="flex items-center gap-1 bg-btn-primary text-white px-3 py-2 rounded text-sm font-medium hover:opacity-90 transition">
+          <button className="flex items-center gap-1 bg-btn-primary text-white px-3 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition">
             <Download size={14} /> Export Products
           </button>
-          <button onClick={openAddModal} className="flex items-center gap-1 bg-btn-primary text-white px-3 py-2 rounded text-sm font-medium hover:opacity-90 transition">
+          <button onClick={openAddModal} className="flex items-center gap-1 btn-grad px-3 py-2 rounded-lg text-sm font-medium">
             <Plus size={14} /> Add Product
           </button>
         </div>
@@ -138,10 +138,10 @@ export default function ProductsPage() {
         <select value={brandFilter} onChange={(e) => setBrandFilter(e.target.value)} className="border border-input-border rounded px-3 py-2 text-sm text-text-primary bg-input-bg focus:outline-none focus:border-input-focus min-w-[180px]">
           {brandsList.map((b) => <option key={b}>{b}</option>)}
         </select>
-        <button onClick={() => setShowRestockModal(true)} className="flex items-center gap-1 bg-btn-danger text-white px-3 py-2 rounded text-sm font-medium hover:opacity-90 transition">
+        <button onClick={() => setShowRestockModal(true)} className="flex items-center gap-1 bg-btn-danger text-white px-3 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition">
           <RefreshCw size={14} /> Restock
         </button>
-        <button className="flex items-center gap-1 bg-btn-primary text-white px-3 py-2 rounded text-sm font-medium hover:opacity-90 transition">
+        <button className="flex items-center gap-1 bg-btn-primary text-white px-3 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition">
           <Download size={14} /> Excel Template
         </button>
       </div>
@@ -204,11 +204,17 @@ export default function ProductsPage() {
                   </td>
                   <td className="px-3 py-3 text-sm text-text-primary">{product.brand}</td>
                   <td className="px-3 py-3 text-sm text-text-primary">₱{product.sellingPrice.toFixed(2)}</td>
-                  <td className="px-3 py-3 text-sm text-text-primary">{product.quantityAlert}</td>
+                  <td className="px-3 py-3 text-sm">
+                    {product.quantityAlert > 0 ? (
+                      <span className="badge bg-accent-orange/15 text-accent-orange">{product.quantityAlert}</span>
+                    ) : (
+                      <span className="text-text-muted">{product.quantityAlert}</span>
+                    )}
+                  </td>
                   <td className="px-3 py-3 text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <button onClick={() => openEditModal(product)} className="text-accent-blue hover:text-accent-blue/80 transition"><Pencil size={16} /></button>
-                      <button onClick={() => { setArchivingProduct(product); setShowArchiveModal(true); }} className="text-btn-danger hover:text-btn-danger/80 transition"><Trash2 size={16} /></button>
+                      <button onClick={() => openEditModal(product)} className="icon-btn text-accent-blue hover:bg-accent-blue/10"><Pencil size={16} /></button>
+                      <button onClick={() => { setArchivingProduct(product); setShowArchiveModal(true); }} className="icon-btn text-accent-red hover:bg-accent-red/10"><Trash2 size={16} /></button>
                     </div>
                   </td>
                 </tr>
@@ -335,7 +341,7 @@ function ProductFormModal({ title, onClose, onSubmit, buttonLabel, buttonColor, 
           <input type="file" accept="image/*" className="w-full border border-input-border rounded px-3 py-2 text-sm bg-input-bg" />
         </div>
         <div className="flex justify-end">
-          <button onClick={onSubmit} className={`${buttonColor || 'bg-btn-primary'} text-white px-4 py-2 rounded text-sm font-medium hover:opacity-90 transition`}>{buttonLabel}</button>
+          <button onClick={onSubmit} className={`${buttonColor || 'bg-btn-primary'} text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition`}>{buttonLabel}</button>
         </div>
       </div>
     </Modal>
