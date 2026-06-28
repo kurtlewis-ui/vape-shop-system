@@ -31,15 +31,15 @@ export default function DashboardPage() {
           href="/dashboard/shops"
           icon={<Store size={24} />}
           iconBg="bg-accent-primary/10"
-          iconColor="text-accent-purple-light"
+          iconColor="text-accent-primary"
           value="0"
           label="Shops"
         />
         <StatsCard
           href="/dashboard/products"
           icon={<Package size={24} />}
-          iconBg="bg-accent-cyan/10"
-          iconColor="text-accent-cyan"
+          iconBg="bg-accent-primary/10"
+          iconColor="text-accent-primary"
           value="0"
           label="Products"
           subtitle="0 brands"
@@ -47,8 +47,8 @@ export default function DashboardPage() {
         <StatsCard
           href="/dashboard/sales/pending"
           icon={<PhilippinePeso size={24} />}
-          iconBg="bg-accent-green/10"
-          iconColor="text-accent-green"
+          iconBg="bg-accent-primary/10"
+          iconColor="text-accent-primary"
           value="0"
           label="Pending Sales"
           subtitle="0 Approved Sales"
@@ -56,8 +56,8 @@ export default function DashboardPage() {
         <StatsCard
           href="/dashboard/users"
           icon={<Users size={24} />}
-          iconBg="bg-accent-blue/10"
-          iconColor="text-accent-blue"
+          iconBg="bg-accent-primary/10"
+          iconColor="text-accent-primary"
           value="0"
           label="Staff"
           subtitle="0 Admins"

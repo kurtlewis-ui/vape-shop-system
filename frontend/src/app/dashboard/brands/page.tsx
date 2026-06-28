@@ -29,13 +29,15 @@ export default function BrandsPage() {
   const [editingBrand, setEditingBrand] = useState<Brand | null>(null);
   const [archivingBrand, setArchivingBrand] = useState<Brand | null>(null);
   const [formName, setFormName] = useState('');
+  const [formError, setFormError] = useState<string | null>(null);
 
   const filteredBrands = brands.filter(
     (b) => b.name.toLowerCase().includes(search.toLowerCase()) || b.slug.includes(search.toLowerCase())
   );
 
   function handleAdd() {
-    if (!formName.trim()) return;
+    if (!formName.trim()) { setFormError('Brand name is required.'); return; }
+    setFormError(null);
     const newBrand: Brand = {
       id: Date.now(),
       name: formName.trim().toUpperCase(),
@@ -48,7 +50,8 @@ export default function BrandsPage() {
   }
 
   function handleEdit() {
-    if (!editingBrand || !formName.trim()) return;
+    if (!editingBrand || !formName.trim()) { setFormError('Brand name is required.'); return; }
+    setFormError(null);
     setBrands(brands.map((b) => (b.id === editingBrand.id ? { ...b, name: formName.trim().toUpperCase(), slug: generateSlug(formName.trim()) } : b)));
     setFormName('');
     setEditingBrand(null);
@@ -67,7 +70,7 @@ export default function BrandsPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-text-primary">Brands</h1>
         <button
-          onClick={() => { setFormName(''); setShowAddModal(true); }}
+          onClick={() => { setFormName(''); setFormError(null); setShowAddModal(true); }}
           className="flex items-center gap-2 btn-grad px-4 py-2 rounded-lg text-sm font-medium"
         >
           <Plus size={16} />
@@ -75,17 +78,15 @@ export default function BrandsPage() {
         </button>
       </div>
 
-      <div className="flex">
+      <div className="relative max-w-sm">
+        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
         <input
           type="text"
           placeholder="Search..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 border border-input-border rounded-l px-4 py-2 text-sm text-text-primary bg-input-bg focus:outline-none focus:border-input-focus"
+          className="w-full border border-input-border rounded-lg pl-9 pr-4 py-2 text-sm text-text-primary bg-input-bg focus:outline-none focus:border-input-focus"
         />
-        <button className="bg-btn-primary text-white px-4 py-2 rounded-r">
-          <Search size={16} />
-        </button>
       </div>
 
       <div className="bg-card-bg border border-card-border rounded-lg overflow-hidden">
@@ -120,7 +121,7 @@ export default function BrandsPage() {
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-2">
                       <button
-                        onClick={() => { setEditingBrand(brand); setFormName(brand.name); setShowEditModal(true); }}
+                        onClick={() => { setEditingBrand(brand); setFormName(brand.name); setFormError(null); setShowEditModal(true); }}
                         className="icon-btn text-accent-blue hover:bg-accent-blue/10"
                       >
                         <Pencil size={16} />
@@ -152,6 +153,9 @@ export default function BrandsPage() {
               <label className="block text-sm font-medium text-text-primary mb-1">Cover Image</label>
               <input type="file" accept="image/*" className="w-full border border-input-border rounded px-3 py-2 text-sm text-text-primary bg-input-bg" />
             </div>
+            {formError && (
+              <p className="text-sm text-accent-red">{formError}</p>
+            )}
             <div className="flex justify-end">
               <button onClick={handleAdd} className="btn-grad px-4 py-2 rounded-lg text-sm font-medium">Save Brand</button>
             </div>
@@ -171,6 +175,9 @@ export default function BrandsPage() {
               <label className="block text-sm font-medium text-text-primary mb-1">Cover Image</label>
               <input type="file" accept="image/*" className="w-full border border-input-border rounded px-3 py-2 text-sm text-text-primary bg-input-bg" />
             </div>
+            {formError && (
+              <p className="text-sm text-accent-red">{formError}</p>
+            )}
             <div className="flex justify-end">
               <button onClick={handleEdit} className="btn-grad px-4 py-2 rounded-lg text-sm font-medium">Save Brand</button>
             </div>

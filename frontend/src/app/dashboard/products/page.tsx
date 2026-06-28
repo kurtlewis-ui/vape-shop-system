@@ -45,6 +45,7 @@ export default function ProductsPage() {
   const [formPrice, setFormPrice] = useState('');
   const [formAlert, setFormAlert] = useState('0');
   const [formQuantities, setFormQuantities] = useState<Record<string, string>>({});
+  const [formError, setFormError] = useState<string | null>(null);
 
   const filteredProducts = products.filter((p) => {
     const matchSearch = p.name.toLowerCase().includes(search.toLowerCase());
@@ -63,6 +64,7 @@ export default function ProductsPage() {
     const q: Record<string, string> = {};
     shopsList.forEach((s) => (q[s] = ''));
     setFormQuantities(q);
+    setFormError(null);
     setShowAddModal(true);
   }
 
@@ -75,11 +77,13 @@ export default function ProductsPage() {
     const q: Record<string, string> = {};
     shopsList.forEach((s) => (q[s] = (product.quantities[s] || 0).toString()));
     setFormQuantities(q);
+    setFormError(null);
     setShowEditModal(true);
   }
 
   function handleAdd() {
-    if (!formName.trim()) return;
+    if (!formName.trim()) { setFormError('Product name is required.'); return; }
+    setFormError(null);
     const quantities: Record<string, number> = {};
     shopsList.forEach((s) => (quantities[s] = parseInt(formQuantities[s] || '0') || 0));
     const newProduct: Product = {
@@ -96,7 +100,8 @@ export default function ProductsPage() {
   }
 
   function handleEdit() {
-    if (!editingProduct || !formName.trim()) return;
+    if (!editingProduct || !formName.trim()) { setFormError('Product name is required.'); return; }
+    setFormError(null);
     const quantities: Record<string, number> = {};
     shopsList.forEach((s) => (quantities[s] = parseInt(formQuantities[s] || '0') || 0));
     setProducts(products.map((p) => p.id === editingProduct.id ? { ...p, name: formName.trim().toUpperCase(), brand: formBrand, sellingPrice: parseFloat(formPrice) || 0, quantityAlert: parseInt(formAlert) || 0, quantities } : p));
@@ -117,7 +122,7 @@ export default function ProductsPage() {
       <div className="flex items-center justify-between flex-wrap gap-4">
         <h1 className="text-2xl font-bold text-text-primary">Products</h1>
         <div className="flex items-center gap-2 flex-wrap">
-          <button onClick={() => setShowImportModal(true)} className="flex items-center gap-1 bg-btn-danger text-white px-3 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition">
+          <button onClick={() => setShowImportModal(true)} className="flex items-center gap-1 bg-btn-primary text-white px-3 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition">
             <Upload size={14} /> Import Products
           </button>
           <button className="flex items-center gap-1 bg-btn-primary text-white px-3 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition">
@@ -138,7 +143,7 @@ export default function ProductsPage() {
         <select value={brandFilter} onChange={(e) => setBrandFilter(e.target.value)} className="border border-input-border rounded px-3 py-2 text-sm text-text-primary bg-input-bg focus:outline-none focus:border-input-focus min-w-[180px]">
           {brandsList.map((b) => <option key={b}>{b}</option>)}
         </select>
-        <button onClick={() => setShowRestockModal(true)} className="flex items-center gap-1 bg-btn-danger text-white px-3 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition">
+        <button onClick={() => setShowRestockModal(true)} className="flex items-center gap-1 bg-btn-primary text-white px-3 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition">
           <RefreshCw size={14} /> Restock
         </button>
         <button className="flex items-center gap-1 bg-btn-primary text-white px-3 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition">
@@ -206,7 +211,7 @@ export default function ProductsPage() {
                   <td className="px-3 py-3 text-sm text-text-primary">₱{product.sellingPrice.toFixed(2)}</td>
                   <td className="px-3 py-3 text-sm">
                     {product.quantityAlert > 0 ? (
-                      <span className="badge bg-accent-orange/15 text-accent-orange">{product.quantityAlert}</span>
+                      <span className="badge badge-neutral"><span className="badge-dot bg-accent-orange" />{product.quantityAlert}</span>
                     ) : (
                       <span className="text-text-muted">{product.quantityAlert}</span>
                     )}
@@ -240,12 +245,12 @@ export default function ProductsPage() {
 
       {/* Add Product Modal */}
       {showAddModal && (
-        <ProductFormModal title="Add New Product" onClose={() => setShowAddModal(false)} onSubmit={handleAdd} buttonLabel="Save Product" formName={formName} setFormName={setFormName} formBrand={formBrand} setFormBrand={setFormBrand} formPrice={formPrice} setFormPrice={setFormPrice} formAlert={formAlert} setFormAlert={setFormAlert} formQuantities={formQuantities} setFormQuantities={setFormQuantities} shopsList={shopsList} brandsList={brandsList} />
+        <ProductFormModal title="Add New Product" onClose={() => setShowAddModal(false)} onSubmit={handleAdd} error={formError} buttonLabel="Save Product" formName={formName} setFormName={setFormName} formBrand={formBrand} setFormBrand={setFormBrand} formPrice={formPrice} setFormPrice={setFormPrice} formAlert={formAlert} setFormAlert={setFormAlert} formQuantities={formQuantities} setFormQuantities={setFormQuantities} shopsList={shopsList} brandsList={brandsList} />
       )}
 
       {/* Edit Product Modal */}
       {showEditModal && editingProduct && (
-        <ProductFormModal title="Edit Product" onClose={() => { setShowEditModal(false); setEditingProduct(null); }} onSubmit={handleEdit} buttonLabel="Update Product" buttonColor="bg-accent-green" formName={formName} setFormName={setFormName} formBrand={formBrand} setFormBrand={setFormBrand} formPrice={formPrice} setFormPrice={setFormPrice} formAlert={formAlert} setFormAlert={setFormAlert} formQuantities={formQuantities} setFormQuantities={setFormQuantities} shopsList={shopsList} brandsList={brandsList} />
+        <ProductFormModal title="Edit Product" onClose={() => { setShowEditModal(false); setEditingProduct(null); }} onSubmit={handleEdit} error={formError} buttonLabel="Update Product" formName={formName} setFormName={setFormName} formBrand={formBrand} setFormBrand={setFormBrand} formPrice={formPrice} setFormPrice={setFormPrice} formAlert={formAlert} setFormAlert={setFormAlert} formQuantities={formQuantities} setFormQuantities={setFormQuantities} shopsList={shopsList} brandsList={brandsList} />
       )}
 
       {/* Archive Modal */}
@@ -296,8 +301,8 @@ export default function ProductsPage() {
   );
 }
 
-function ProductFormModal({ title, onClose, onSubmit, buttonLabel, buttonColor, formName, setFormName, formBrand, setFormBrand, formPrice, setFormPrice, formAlert, setFormAlert, formQuantities, setFormQuantities, shopsList, brandsList }: {
-  title: string; onClose: () => void; onSubmit: () => void; buttonLabel: string; buttonColor?: string;
+function ProductFormModal({ title, onClose, onSubmit, buttonLabel, buttonColor, error, formName, setFormName, formBrand, setFormBrand, formPrice, setFormPrice, formAlert, setFormAlert, formQuantities, setFormQuantities, shopsList, brandsList }: {
+  title: string; onClose: () => void; onSubmit: () => void; buttonLabel: string; buttonColor?: string; error?: string | null;
   formName: string; setFormName: (v: string) => void; formBrand: string; setFormBrand: (v: string) => void;
   formPrice: string; setFormPrice: (v: string) => void; formAlert: string; setFormAlert: (v: string) => void;
   formQuantities: Record<string, string>; setFormQuantities: (v: Record<string, string>) => void;
@@ -340,6 +345,9 @@ function ProductFormModal({ title, onClose, onSubmit, buttonLabel, buttonColor, 
           <label className="block text-sm font-medium text-text-primary mb-1">Product Image</label>
           <input type="file" accept="image/*" className="w-full border border-input-border rounded px-3 py-2 text-sm bg-input-bg" />
         </div>
+        {error && (
+          <p className="text-sm text-accent-red">{error}</p>
+        )}
         <div className="flex justify-end">
           <button onClick={onSubmit} className={`${buttonColor || 'bg-btn-primary'} text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition`}>{buttonLabel}</button>
         </div>

@@ -199,11 +199,8 @@ export default function SalesRecordsPage() {
                         <td className="px-4 py-3 text-sm text-text-primary">&#8369;{item.sellingPrice.toLocaleString()}</td>
                         <td className="px-4 py-3 text-sm text-text-primary font-medium">&#8369;{item.subTotal.toLocaleString()}</td>
                         <td className="px-4 py-3">
-                          <span className={`badge ${
-                            item.paymentMethod === 'Cash'
-                              ? 'bg-accent-green/15 text-accent-green'
-                              : 'bg-accent-blue/15 text-accent-blue'
-                          }`}>
+                          <span className="badge badge-neutral">
+                            <span className={`badge-dot ${item.paymentMethod === 'Cash' ? 'bg-accent-green' : 'bg-accent-blue'}`} />
                             {item.paymentMethod}
                           </span>
                         </td>
