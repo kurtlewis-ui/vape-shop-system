@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Search, Filter, X } from 'lucide-react';
+import { Search, Trash2, X } from 'lucide-react';
 
 interface SaleItem {
   id: number;
@@ -15,6 +15,10 @@ interface SaleItem {
   paymentMethod: 'Cash' | 'Gcash';
   staff: string;
   dateCreated: string;
+}
+
+interface DisposedRecord extends SaleItem {
+  disposedAt: string;
 }
 
 const mockSalesData: SaleItem[] = [
@@ -34,6 +38,8 @@ export default function SalesRecordsPage() {
   const [viewBy, setViewBy] = useState('View by Sale');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [showDisposalsModal, setShowDisposalsModal] = useState(false);
+  const [disposedItems, setDisposedItems] = useState<DisposedRecord[]>([]);
 
   const filteredItems = mockSalesData.filter(
     (item) =>
@@ -64,6 +70,22 @@ export default function SalesRecordsPage() {
     setSearch('');
   };
 
+  const totalDisposedValue = disposedItems.reduce((sum, d) => sum + d.subTotal, 0);
+
+  // Records every item currently shown in the table as disposed stock,
+  // stamping each with the time it was recorded. Items already recorded
+  // are skipped so the same item is not logged twice.
+  const handleRecordDisposals = () => {
+    const timestamp = new Date().toLocaleString();
+    setDisposedItems((prev) => {
+      const existingIds = new Set(prev.map((d) => d.id));
+      const additions = filteredItems
+        .filter((item) => !existingIds.has(item.id))
+        .map((item) => ({ ...item, disposedAt: timestamp }));
+      return [...prev, ...additions];
+    });
+  };
+
   let rowIndex = 0;
 
   return (
@@ -77,8 +99,14 @@ export default function SalesRecordsPage() {
           >
             Clear Filter
           </button>
-          <button className="px-4 py-2 bg-btn-danger text-white rounded-lg text-sm font-medium hover:opacity-90 transition">
+          <button
+            onClick={() => setShowDisposalsModal(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-btn-danger text-white rounded-lg text-sm font-medium hover:opacity-90 transition"
+          >
             Disposals
+            {disposedItems.length > 0 && (
+              <span className="badge bg-white/20 text-white">{disposedItems.length}</span>
+            )}
           </button>
         </div>
       </div>
@@ -210,6 +238,83 @@ export default function SalesRecordsPage() {
             </p>
           </div>
         </div>
+      </div>
+
+      {/* Disposals Modal */}
+      {showDisposalsModal && (
+        <Modal title="Disposed Items" onClose={() => setShowDisposalsModal(false)}>
+          <div className="space-y-4">
+            <p className="text-sm text-text-secondary">
+              Record the items shown in the current view as disposed (damaged, expired or
+              unsellable stock). Recorded disposals are listed below.
+            </p>
+
+            <button
+              onClick={handleRecordDisposals}
+              className="w-full flex items-center justify-center gap-2 bg-btn-danger text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition"
+            >
+              <Trash2 size={15} /> Record {filteredItems.length} Item{filteredItems.length === 1 ? '' : 's'} as Disposed
+            </button>
+
+            {disposedItems.length === 0 ? (
+              <p className="py-6 text-center text-sm text-text-muted">No disposed items recorded yet.</p>
+            ) : (
+              <>
+                <div className="max-h-72 overflow-y-auto rounded-lg border border-card-border">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="bg-table-header text-table-header-text">
+                        <th className="px-3 py-2 text-left text-xs font-semibold uppercase">Name</th>
+                        <th className="px-3 py-2 text-left text-xs font-semibold uppercase">Qty</th>
+                        <th className="px-3 py-2 text-left text-xs font-semibold uppercase">Brand</th>
+                        <th className="px-3 py-2 text-left text-xs font-semibold uppercase">Value</th>
+                        <th className="px-3 py-2 text-left text-xs font-semibold uppercase">Disposed At</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {disposedItems.map((d) => (
+                        <tr key={d.id} className="border-t border-card-border">
+                          <td className="px-3 py-2 text-sm text-text-primary">{d.name}</td>
+                          <td className="px-3 py-2 text-sm text-text-primary">{d.quantity}</td>
+                          <td className="px-3 py-2 text-sm text-text-secondary">{d.brand}</td>
+                          <td className="px-3 py-2 text-sm text-text-primary">&#8369;{d.subTotal.toLocaleString()}</td>
+                          <td className="px-3 py-2 text-sm text-text-secondary">{d.disposedAt}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold text-text-primary">
+                    Total disposed: &#8369;{totalDisposedValue.toLocaleString()}
+                  </p>
+                  <button
+                    onClick={() => setDisposedItems([])}
+                    className="text-sm text-text-secondary hover:text-accent-red transition-colors"
+                  >
+                    Clear records
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </Modal>
+      )}
+    </div>
+  );
+}
+
+function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-card-bg border border-card-border rounded-2xl shadow-2xl shadow-black/40 w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-bold text-text-primary">{title}</h3>
+          <button onClick={onClose} className="rounded-lg p-1 text-text-muted hover:text-text-primary hover:bg-white/5 transition-colors"><X size={20} /></button>
+        </div>
+        {children}
       </div>
     </div>
   );
