@@ -105,14 +105,14 @@ export default function ShopsPage() {
             ) : (
               filteredShops.map((shop, i) => (
                 <tr key={shop.id} className="border-t border-card-border hover:bg-white/5 transition-colors">
-                  <td className="px-4 py-3 text-sm text-accent-blue font-medium">{i + 1}</td>
-                  <td className="px-4 py-3 text-sm text-accent-blue font-medium">{shop.name}</td>
-                  <td className="px-4 py-3 text-sm text-accent-blue">{shop.slug}</td>
+                  <td className="px-4 py-3 text-sm text-text-muted">{i + 1}</td>
+                  <td className="px-4 py-3 text-sm text-text-primary font-medium">{shop.name}</td>
+                  <td className="px-4 py-3 text-sm text-text-secondary">{shop.slug}</td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-2">
                       <button
                         onClick={() => { setEditingShop(shop); setNewName(shop.name); setShowEditModal(true); }}
-                        className="text-accent-blue hover:text-accent-blue/80 transition"
+                        className="text-text-muted hover:text-accent-primary transition"
                         title="Edit"
                       >
                         <Pencil size={16} />

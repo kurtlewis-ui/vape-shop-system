@@ -105,7 +105,7 @@ export default function BrandsPage() {
             ) : (
               filteredBrands.map((brand, i) => (
                 <tr key={brand.id} className="border-t border-card-border hover:bg-white/5 transition-colors">
-                  <td className="px-4 py-3 text-sm text-accent-blue font-medium">{i + 1}</td>
+                  <td className="px-4 py-3 text-sm text-text-muted font-medium">{i + 1}</td>
                   <td className="px-4 py-3 text-sm text-text-muted">
                     {brand.coverImage ? (
                       <div className="w-12 h-12 rounded bg-white/10 overflow-hidden">
@@ -116,12 +116,12 @@ export default function BrandsPage() {
                     )}
                   </td>
                   <td className="px-4 py-3 text-sm font-bold text-text-primary">{brand.name}</td>
-                  <td className="px-4 py-3 text-sm text-accent-blue">{brand.slug}</td>
+                  <td className="px-4 py-3 text-sm text-text-secondary">{brand.slug}</td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-2">
                       <button
                         onClick={() => { setEditingBrand(brand); setFormName(brand.name); setShowEditModal(true); }}
-                        className="text-accent-blue hover:text-accent-blue/80 transition"
+                        className="text-text-muted hover:text-accent-primary transition"
                       >
                         <Pencil size={16} />
                       </button>

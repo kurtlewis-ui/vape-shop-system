@@ -179,7 +179,7 @@ export default function ProductsPage() {
             ) : (
               displayProducts.map((product, i) => (
                 <tr key={product.id} className="border-t border-card-border hover:bg-white/5 transition-colors align-top">
-                  <td className="px-3 py-3 text-sm text-accent-blue font-medium">{(entriesPerPage === 'All' ? 0 : (currentPage - 1) * (entriesPerPage as number)) + i + 1}</td>
+                  <td className="px-3 py-3 text-sm text-text-muted font-medium">{(entriesPerPage === 'All' ? 0 : (currentPage - 1) * (entriesPerPage as number)) + i + 1}</td>
                   <td className="px-3 py-3">
                     {product.image ? (
                       <div className="w-10 h-10 rounded bg-white/10 overflow-hidden"><img src={product.image} alt="" className="w-full h-full object-cover" /></div>
@@ -196,7 +196,7 @@ export default function ProductsPage() {
                         {shopsList.map((shop) => (
                           <div key={shop} className="text-xs">
                             <span className="font-semibold text-text-primary">{shop}:</span>{' '}
-                            <span className="text-accent-blue">{product.quantities[shop] || 0}</span>
+                            <span className="text-text-secondary">{product.quantities[shop] || 0}</span>
                           </div>
                         ))}
                       </div>
@@ -207,7 +207,7 @@ export default function ProductsPage() {
                   <td className="px-3 py-3 text-sm text-text-primary">{product.quantityAlert}</td>
                   <td className="px-3 py-3 text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <button onClick={() => openEditModal(product)} className="text-accent-blue hover:text-accent-blue/80 transition"><Pencil size={16} /></button>
+                      <button onClick={() => openEditModal(product)} className="text-text-muted hover:text-accent-primary transition"><Pencil size={16} /></button>
                       <button onClick={() => { setArchivingProduct(product); setShowArchiveModal(true); }} className="text-btn-danger hover:text-btn-danger/80 transition"><Trash2 size={16} /></button>
                     </div>
                   </td>

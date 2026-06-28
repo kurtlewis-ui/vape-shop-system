@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Store, Package, DollarSign, Users, BarChart3 } from 'lucide-react';
+import { Store, Package, PhilippinePeso, Users, BarChart3 } from 'lucide-react';
 
 // Filters are kept for when the sales backend is wired up. There is no
 // hardcoded sales data here on purpose — the dashboard shows honest
@@ -46,7 +46,7 @@ export default function DashboardPage() {
         />
         <StatsCard
           href="/dashboard/sales/pending"
-          icon={<DollarSign size={24} />}
+          icon={<PhilippinePeso size={24} />}
           iconBg="bg-accent-green/15"
           iconColor="text-accent-green"
           value="0"
