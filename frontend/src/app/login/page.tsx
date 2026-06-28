@@ -44,18 +44,25 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center px-4 py-10 bg-page-bg">
-      {/* Background gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-accent-primary/10 via-transparent to-accent-primary/5" />
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-10 bg-page-bg">
+      {/* Soft colored glow blobs for an inviting, modern feel */}
+      <div className="pointer-events-none absolute -top-32 -left-24 h-96 w-96 rounded-full bg-accent-primary/25 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-32 -right-24 h-96 w-96 rounded-full bg-accent-pink/20 blur-3xl" />
 
       <div className="relative flex w-full max-w-[420px] flex-col items-center">
         {/* Circular logo template (300 x 300) — outside the card. Replace with your own <img> */}
-        <div className="mb-8 flex aspect-square w-full max-w-[300px] items-center justify-center rounded-full border-2 border-dashed border-card-border bg-card-bg/60">
+        <div className="mb-6 flex aspect-square w-full max-w-[260px] items-center justify-center rounded-full border-2 border-dashed border-accent-primary/30 bg-gradient-to-br from-accent-primary/10 to-accent-pink/10">
           <span className="text-sm font-medium uppercase tracking-widest text-text-muted">Logo</span>
         </div>
 
+        {/* Welcome heading */}
+        <div className="mb-5 text-center">
+          <h1 className="text-2xl font-extrabold text-gradient">Welcome back</h1>
+          <p className="mt-1 text-sm text-text-secondary">Sign in to manage your shops</p>
+        </div>
+
         {/* Card */}
-        <div className="w-full rounded-2xl bg-card-bg border border-card-border p-8 shadow-xl shadow-black/30">
+        <div className="w-full rounded-2xl bg-card-bg/90 backdrop-blur border border-card-border p-8 shadow-2xl shadow-black/40">
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Email Field */}
             <div>
@@ -117,7 +124,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-xl bg-accent-primary px-4 py-3.5 font-semibold text-white shadow-lg shadow-black/20 transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60 disabled:shadow-none"
+              className="w-full rounded-xl bg-gradient-to-r from-accent-primary to-accent-pink px-4 py-3.5 font-semibold text-white shadow-lg shadow-accent-primary/30 transition-all hover:shadow-xl hover:shadow-accent-primary/40 hover:brightness-110 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 disabled:shadow-none"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">

@@ -14,7 +14,7 @@ interface EditStaffModalProps {
 }
 
 const inputClass =
-  'w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200';
+  'w-full rounded-lg border border-input-border bg-input-bg px-3 py-2 text-text-primary placeholder-text-muted outline-none transition-colors focus:border-input-focus focus:ring-2 focus:ring-input-focus/30';
 
 export function EditStaffModal({ user, onClose, roles, branches }: EditStaffModalProps) {
   const queryClient = useQueryClient();
@@ -82,7 +82,7 @@ export function EditStaffModal({ user, onClose, roles, branches }: EditStaffModa
       <form onSubmit={handleSubmit} className="space-y-3">
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">First name</label>
+            <label className="mb-1 block text-sm font-medium text-text-secondary">First name</label>
             <input
               className={inputClass}
               value={firstName}
@@ -91,7 +91,7 @@ export function EditStaffModal({ user, onClose, roles, branches }: EditStaffModa
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Last name</label>
+            <label className="mb-1 block text-sm font-medium text-text-secondary">Last name</label>
             <input
               className={inputClass}
               value={lastName}
@@ -102,7 +102,7 @@ export function EditStaffModal({ user, onClose, roles, branches }: EditStaffModa
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700">Email</label>
+          <label className="mb-1 block text-sm font-medium text-text-secondary">Email</label>
           <input
             type="email"
             className={inputClass}
@@ -113,7 +113,7 @@ export function EditStaffModal({ user, onClose, roles, branches }: EditStaffModa
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700">Role</label>
+          <label className="mb-1 block text-sm font-medium text-text-secondary">Role</label>
           <select
             className={inputClass}
             value={roleId}
@@ -128,7 +128,7 @@ export function EditStaffModal({ user, onClose, roles, branches }: EditStaffModa
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700">Branch</label>
+          <label className="mb-1 block text-sm font-medium text-text-secondary">Branch</label>
           <select
             className={inputClass}
             value={branchId}
@@ -141,38 +141,38 @@ export function EditStaffModal({ user, onClose, roles, branches }: EditStaffModa
               </option>
             ))}
           </select>
-          <p className="mt-1 text-xs text-slate-400">
+          <p className="mt-1 text-xs text-text-muted">
             Staff are restricted to selling from their assigned branch. Admins can be left
             unassigned.
           </p>
         </div>
 
-        <label className="flex items-center gap-2 text-sm text-slate-700">
+        <label className="flex items-center gap-2 text-sm text-text-secondary">
           <input
             type="checkbox"
             checked={isActive}
             onChange={(e) => setIsActive(e.target.checked)}
-            className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+            className="h-4 w-4 rounded border-input-border bg-input-bg text-accent-primary focus:ring-accent-primary"
           />
           Active (can log in)
         </label>
 
         {formError && (
-          <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{formError}</div>
+          <div className="rounded-lg bg-accent-red/10 border border-accent-red/30 px-3 py-2 text-sm text-accent-red">{formError}</div>
         )}
 
         <div className="flex justify-end gap-2 pt-2">
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+            className="rounded-lg border border-card-border px-4 py-2 text-sm font-medium text-text-secondary hover:bg-white/5 transition-colors"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={mutation.isPending}
-            className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-60"
+            className="btn-grad rounded-lg px-4 py-2 text-sm font-medium disabled:opacity-60"
           >
             {mutation.isPending ? 'Saving…' : 'Save changes'}
           </button>

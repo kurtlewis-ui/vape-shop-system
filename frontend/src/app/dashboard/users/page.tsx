@@ -323,7 +323,7 @@ export default function UsersPage() {
 
       <button
         onClick={isEdit ? handleUpdateUser : handleSaveUser}
-        className="w-full py-2.5 bg-btn-primary text-white rounded-lg font-medium hover:opacity-90 transition"
+        className="w-full btn-grad py-2.5 rounded-lg font-medium"
       >
         {isEdit ? 'Update User' : 'Save User'}
       </button>
@@ -336,7 +336,7 @@ export default function UsersPage() {
         <h1 className="text-2xl font-bold text-text-primary">Users</h1>
         <button
           onClick={handleAdd}
-          className="flex items-center gap-2 px-4 py-2 bg-btn-primary text-white rounded-lg font-medium hover:opacity-90 transition"
+          className="flex items-center gap-2 btn-grad px-4 py-2 rounded-lg font-medium"
         >
           <Plus size={18} /> Add New User
         </button>
@@ -398,9 +398,9 @@ export default function UsersPage() {
                   </td>
                   <td className="px-4 py-3 text-sm text-text-secondary">{user.email}</td>
                   <td className="px-4 py-3">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    <span className={`badge ${
                       user.role === 'Admin'
-                        ? 'bg-blue-500/20 text-blue-300'
+                        ? 'bg-accent-blue/15 text-accent-blue'
                         : 'bg-white/10 text-text-secondary'
                     }`}>
                       {user.role}
@@ -408,8 +408,8 @@ export default function UsersPage() {
                   </td>
                   <td className="px-4 py-3 text-sm text-text-secondary">{user.shop}</td>
                   <td className="px-4 py-3">
-                    <span className={`text-sm font-medium ${
-                      user.status === 'Active' ? 'text-accent-green' : 'text-accent-red'
+                    <span className={`badge ${
+                      user.status === 'Active' ? 'bg-accent-green/15 text-accent-green' : 'bg-accent-red/15 text-accent-red'
                     }`}>
                       {user.status}
                     </span>

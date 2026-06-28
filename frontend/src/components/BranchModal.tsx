@@ -14,7 +14,7 @@ interface BranchModalProps {
 }
 
 const inputClass =
-  'w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200';
+  'w-full rounded-lg border border-input-border bg-input-bg px-3 py-2 text-text-primary placeholder-text-muted outline-none transition-colors focus:border-input-focus focus:ring-2 focus:ring-input-focus/30';
 
 export function BranchModal({ open, onClose, branch }: BranchModalProps) {
   const queryClient = useQueryClient();
@@ -75,7 +75,7 @@ export function BranchModal({ open, onClose, branch }: BranchModalProps) {
     <Modal open={open} onClose={onClose} title={isEdit ? 'Edit branch' : 'Add new branch'}>
       <form onSubmit={handleSubmit} className="space-y-3">
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700">Branch name</label>
+          <label className="mb-1 block text-sm font-medium text-text-secondary">Branch name</label>
           <input
             className={inputClass}
             value={name}
@@ -87,8 +87,8 @@ export function BranchModal({ open, onClose, branch }: BranchModalProps) {
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700">
-            Address <span className="text-slate-400">(optional)</span>
+          <label className="mb-1 block text-sm font-medium text-text-secondary">
+            Address <span className="text-text-muted">(optional)</span>
           </label>
           <textarea
             className={inputClass}
@@ -99,32 +99,32 @@ export function BranchModal({ open, onClose, branch }: BranchModalProps) {
           />
         </div>
 
-        <label className="flex items-center gap-2 text-sm text-slate-700">
+        <label className="flex items-center gap-2 text-sm text-text-secondary">
           <input
             type="checkbox"
             checked={isActive}
             onChange={(e) => setIsActive(e.target.checked)}
-            className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+            className="h-4 w-4 rounded border-input-border bg-input-bg text-accent-primary focus:ring-accent-primary"
           />
           Active
         </label>
 
         {formError && (
-          <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{formError}</div>
+          <div className="rounded-lg bg-accent-red/10 border border-accent-red/30 px-3 py-2 text-sm text-accent-red">{formError}</div>
         )}
 
         <div className="flex justify-end gap-2 pt-2">
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+            className="rounded-lg border border-card-border px-4 py-2 text-sm font-medium text-text-secondary hover:bg-white/5 transition-colors"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={mutation.isPending}
-            className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-60"
+            className="btn-grad rounded-lg px-4 py-2 text-sm font-medium disabled:opacity-60"
           >
             {mutation.isPending ? 'Saving…' : isEdit ? 'Save changes' : 'Create branch'}
           </button>

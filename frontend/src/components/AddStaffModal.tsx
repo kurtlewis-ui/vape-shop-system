@@ -14,7 +14,7 @@ interface AddStaffModalProps {
 }
 
 const inputClass =
-  'w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200';
+  'w-full rounded-lg border border-input-border bg-input-bg px-3 py-2 text-text-primary placeholder-text-muted outline-none transition-colors focus:border-input-focus focus:ring-2 focus:ring-input-focus/30';
 
 export function AddStaffModal({ open, onClose, roles, branches }: AddStaffModalProps) {
   const queryClient = useQueryClient();
@@ -103,7 +103,7 @@ export function AddStaffModal({ open, onClose, roles, branches }: AddStaffModalP
       <form onSubmit={handleSubmit} className="space-y-3">
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">First name</label>
+            <label className="mb-1 block text-sm font-medium text-text-secondary">First name</label>
             <input
               className={inputClass}
               value={firstName}
@@ -112,7 +112,7 @@ export function AddStaffModal({ open, onClose, roles, branches }: AddStaffModalP
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Last name</label>
+            <label className="mb-1 block text-sm font-medium text-text-secondary">Last name</label>
             <input
               className={inputClass}
               value={lastName}
@@ -123,7 +123,7 @@ export function AddStaffModal({ open, onClose, roles, branches }: AddStaffModalP
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700">Email</label>
+          <label className="mb-1 block text-sm font-medium text-text-secondary">Email</label>
           <input
             type="email"
             className={inputClass}
@@ -135,7 +135,7 @@ export function AddStaffModal({ open, onClose, roles, branches }: AddStaffModalP
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700">Role</label>
+          <label className="mb-1 block text-sm font-medium text-text-secondary">Role</label>
           <select
             className={inputClass}
             value={selectedRoleId}
@@ -151,8 +151,8 @@ export function AddStaffModal({ open, onClose, roles, branches }: AddStaffModalP
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700">
-            Branch {isStaffRole && <span className="text-red-500">*</span>}
+          <label className="mb-1 block text-sm font-medium text-text-secondary">
+            Branch {isStaffRole && <span className="text-accent-red">*</span>}
           </label>
           <select
             className={inputClass}
@@ -168,13 +168,13 @@ export function AddStaffModal({ open, onClose, roles, branches }: AddStaffModalP
               </option>
             ))}
           </select>
-          <p className="mt-1 text-xs text-slate-400">
+          <p className="mt-1 text-xs text-text-muted">
             Staff can only sell from their assigned branch.
           </p>
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700">Password</label>
+          <label className="mb-1 block text-sm font-medium text-text-secondary">Password</label>
           <input
             type="password"
             className={inputClass}
@@ -185,7 +185,7 @@ export function AddStaffModal({ open, onClose, roles, branches }: AddStaffModalP
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700">Confirm password</label>
+          <label className="mb-1 block text-sm font-medium text-text-secondary">Confirm password</label>
           <input
             type="password"
             className={inputClass}
@@ -195,26 +195,26 @@ export function AddStaffModal({ open, onClose, roles, branches }: AddStaffModalP
           />
         </div>
 
-        <p className="text-xs text-slate-400">
+        <p className="text-xs text-text-muted">
           Min 8 characters, with an uppercase, lowercase, a number and a special character (@$!%*?&).
         </p>
 
         {formError && (
-          <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{formError}</div>
+          <div className="rounded-lg bg-accent-red/10 border border-accent-red/30 px-3 py-2 text-sm text-accent-red">{formError}</div>
         )}
 
         <div className="flex justify-end gap-2 pt-2">
           <button
             type="button"
             onClick={handleClose}
-            className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+            className="rounded-lg border border-card-border px-4 py-2 text-sm font-medium text-text-secondary hover:bg-white/5 transition-colors"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={mutation.isPending}
-            className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-60"
+            className="btn-grad rounded-lg px-4 py-2 text-sm font-medium disabled:opacity-60"
           >
             {mutation.isPending ? 'Creating…' : 'Create staff'}
           </button>

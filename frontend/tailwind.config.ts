@@ -5,39 +5,41 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Primary backgrounds (soft, neutral dark — easy on the eyes)
-        'page-bg': '#191b21',
-        'card-bg': '#20232b',
-        'card-border': '#2d313b',
-        // Subtle table header instead of a bright, glaring fill
-        'table-header': '#272b34',
-        'table-header-text': '#cbd0db',
+        // Primary backgrounds (deep, cool — comfortable but with a bit more depth)
+        'page-bg': '#15161d',
+        'card-bg': '#1d1f29',
+        'card-border': '#2b2e3a',
+        // Subtle table header (kept calm so big areas never glare)
+        'table-header': '#242732',
+        'table-header-text': '#cdd2dd',
         // Nav
-        'nav-bg': '#1c1f26',
-        'nav-border': '#2d313b',
+        'nav-bg': '#181a22',
+        'nav-border': '#2b2e3a',
         'nav-text': '#aab0bd',
-        'nav-active': '#8e84d4',
+        'nav-active': '#7c6cf5',
         // Text colors (off-white, not harsh pure white)
-        'text-primary': '#e6e8ee',
-        'text-secondary': '#a3a9b7',
-        'text-muted': '#737a89',
-        'text-link': '#a79ee8',
-        // Accent colors (muted/desaturated so nothing screams)
-        'accent-primary': '#8e84d4',
-        'accent-purple': '#9a90db',
-        'accent-purple-light': '#b4ace7',
-        'accent-green': '#6cbf95',
-        'accent-orange': '#d6a06a',
-        'accent-blue': '#79a3d4',
-        'accent-red': '#d98a8a',
+        'text-primary': '#eceef4',
+        'text-secondary': '#a6acbb',
+        'text-muted': '#727988',
+        'text-link': '#a78bfa',
+        // Accent colors (vibrant but tasteful — used sparingly for life)
+        'accent-primary': '#7c6cf5',
+        'accent-purple': '#a78bfa',
+        'accent-purple-light': '#c4b5fd',
+        'accent-pink': '#f472b6',
+        'accent-cyan': '#2dd4bf',
+        'accent-green': '#34d399',
+        'accent-orange': '#fb9a4b',
+        'accent-blue': '#60a5fa',
+        'accent-red': '#f87171',
         // Buttons
-        'btn-primary': '#8e84d4',
-        'btn-danger': '#c47b6b',
-        'btn-success': '#6cbf95',
+        'btn-primary': '#7c6cf5',
+        'btn-danger': '#ef6b5c',
+        'btn-success': '#34d399',
         // Input/form colors
-        'input-bg': '#272a32',
-        'input-border': '#3a3e48',
-        'input-focus': '#8e84d4',
+        'input-bg': '#23262f',
+        'input-border': '#363a46',
+        'input-focus': '#7c6cf5',
       },
       borderRadius: {
         xl: '12px',

@@ -110,14 +110,14 @@ export default function BrandsArchivePage() {
                       <div className="flex items-center gap-3">
                         <button
                           onClick={() => handleRestore(brand)}
-                          className="flex items-center gap-1 text-accent-green hover:underline text-sm font-medium"
+                          className="inline-flex items-center gap-1 rounded-lg bg-accent-green/10 px-2.5 py-1 text-sm font-medium text-accent-green hover:bg-accent-green/20 transition-colors"
                           title="Restore"
                         >
                           <Undo2 size={14} /> Restore
                         </button>
                         <button
                           onClick={() => handleDeleteClick(brand)}
-                          className="flex items-center gap-1 text-accent-red hover:underline text-sm font-medium"
+                          className="inline-flex items-center gap-1 rounded-lg bg-accent-red/10 px-2.5 py-1 text-sm font-medium text-accent-red hover:bg-accent-red/20 transition-colors"
                           title="Delete permanently"
                         >
                           <Trash2 size={14} /> Delete

@@ -101,15 +101,18 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-page-bg">
       {/* Top Header */}
-      <header className="sticky top-0 z-50 bg-nav-bg border-b border-nav-border shadow-sm">
+      <header className="sticky top-0 z-50 bg-nav-bg/80 backdrop-blur-md border-b border-nav-border shadow-sm shadow-black/20">
         {/* Top bar: Logo + User */}
         <div className="flex items-center justify-between px-6 py-3">
-          <Link href="/dashboard" className="text-xl font-bold text-accent-primary">
-            Vape Shop
+          <Link href="/dashboard" className="flex items-center gap-2.5 group">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-accent-primary to-accent-pink text-sm font-extrabold text-white shadow-md shadow-accent-primary/30 transition-transform group-hover:scale-105">
+              V
+            </span>
+            <span className="text-xl font-extrabold text-gradient">Vape Shop</span>
           </Link>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent-primary text-xs font-bold text-white">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-accent-primary to-accent-pink text-xs font-bold text-white shadow-sm shadow-accent-primary/30">
                 {user?.firstName?.[0]}{user?.lastName?.[0]}
               </div>
               <span className="text-sm font-medium text-text-primary hidden sm:inline">
@@ -118,7 +121,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             </div>
             <button
               onClick={handleLogout}
-              className="flex items-center gap-1 text-sm text-text-secondary hover:text-accent-red transition-colors"
+              className="flex items-center gap-1 rounded-lg p-2 text-sm text-text-secondary hover:text-accent-red hover:bg-accent-red/10 transition-colors"
               title="Logout"
             >
               <LogOut size={16} />
@@ -138,10 +141,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                   <button
                     onClick={() => setOpenDropdown(openDropdown === item.label ? null : item.label)}
                     onBlur={() => setTimeout(() => setOpenDropdown(null), 200)}
-                    className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded transition-colors whitespace-nowrap ${
+                    className={`flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium rounded-lg transition-all whitespace-nowrap ${
                       active
-                        ? 'text-accent-primary border-b-2 border-accent-primary'
-                        : 'text-nav-text hover:text-accent-primary'
+                        ? 'bg-accent-primary/15 text-accent-purple-light shadow-sm shadow-accent-primary/10'
+                        : 'text-nav-text hover:text-text-primary hover:bg-white/5'
                     }`}
                   >
                     <span className="text-accent-primary">{item.icon}</span>
@@ -151,10 +154,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 ) : (
                   <Link
                     href={item.href}
-                    className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded transition-colors whitespace-nowrap ${
+                    className={`flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium rounded-lg transition-all whitespace-nowrap ${
                       active
-                        ? 'text-accent-primary border-b-2 border-accent-primary'
-                        : 'text-nav-text hover:text-accent-primary'
+                        ? 'bg-accent-primary/15 text-accent-purple-light shadow-sm shadow-accent-primary/10'
+                        : 'text-nav-text hover:text-text-primary hover:bg-white/5'
                     }`}
                   >
                     <span className="text-accent-primary">{item.icon}</span>
