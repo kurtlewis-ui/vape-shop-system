@@ -15,6 +15,8 @@ import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { QueryProductDto } from './dto/query-product.dto';
+import { ImportProductsDto } from './dto/import-products.dto';
+import { RestockDto } from './dto/restock.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -40,6 +42,22 @@ export class ProductsController {
   async findAll(@Query() query: QueryProductDto) {
     const result = await this.productsService.findAll(query);
     return { success: true, data: result.data, pagination: result.pagination };
+  }
+
+  @Post('import')
+  @Roles('Owner', 'Admin')
+  @ApiOperation({ summary: 'Bulk import products (creates/updates; auto-creates brands)' })
+  async importProducts(@Body() dto: ImportProductsDto, @CurrentUser() user: RequestUser) {
+    const data = await this.productsService.importProducts(dto.products, user.userId);
+    return { success: true, data };
+  }
+
+  @Post('restock')
+  @Roles('Owner', 'Admin')
+  @ApiOperation({ summary: 'Add stock to products at branches' })
+  async restock(@Body() dto: RestockDto, @CurrentUser() user: RequestUser) {
+    const data = await this.productsService.restock(dto.items, user.userId);
+    return { success: true, data };
   }
 
   @Get('archived')

@@ -36,6 +36,7 @@ const navItems: NavItem[] = [
     dropdown: [
       { label: 'Records', href: '/dashboard/sales/records' },
       { label: 'Pending', href: '/dashboard/sales/pending' },
+      { label: 'Disposals', href: '/dashboard/sales/disposals' },
     ],
   },
   { label: 'User', href: '/dashboard/users', icon: <Users size={16} /> },

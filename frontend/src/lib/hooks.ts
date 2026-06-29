@@ -12,12 +12,16 @@ import type {
   Branch,
   Brand,
   DashboardStats,
+  Disposal,
+  DisposalSummary,
   FullUser,
   Pagination,
   Product,
   RoleOption,
   Sale,
+  SalesOverviewPoint,
   SalesSummary,
+  TopProduct,
 } from './types';
 
 // Every backend response is wrapped as { success, data, pagination?, summary? }.
@@ -182,6 +186,40 @@ export function useArchivedProducts() {
   return useQuery({
     queryKey: ['products', 'archived'],
     queryFn: () => getList<Product>('/products/archived', { limit: 200 }),
+  });
+}
+
+export interface ImportProductRow {
+  name: string;
+  brand: string;
+  sellingPrice: number;
+  quantityAlert?: number;
+  quantities?: { branchName: string; quantity: number }[];
+}
+
+export function useImportProducts() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: (products: ImportProductRow[]) =>
+      api.post('/products/import', { products }).then((r) => r.data.data),
+    onSuccess: () => invalidate(['products'], ['brands'], ['stats']),
+  });
+}
+
+export interface RestockItem {
+  productId?: string;
+  productName?: string;
+  branchId?: string;
+  branchName?: string;
+  quantity: number;
+}
+
+export function useRestock() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: (items: RestockItem[]) =>
+      api.post('/products/restock', { items }).then((r) => r.data.data),
+    onSuccess: () => invalidate(['products'], ['stats']),
   });
 }
 
@@ -412,5 +450,52 @@ export function useActivityLogs(params?: { search?: string; category?: string })
         search: params?.search || undefined,
         category: params?.category && params.category !== 'All' ? params.category : undefined,
       }),
+  });
+}
+
+export function useSalesOverview(period: string, branchId?: string) {
+  return useQuery({
+    queryKey: ['stats', 'sales-overview', { period, branchId }],
+    queryFn: () => getData<SalesOverviewPoint[]>('/stats/sales-overview', { period, branchId: branchId || undefined }),
+  });
+}
+
+export function useTopProducts(branchId?: string) {
+  return useQuery({
+    queryKey: ['stats', 'top-products', { branchId }],
+    queryFn: () => getData<TopProduct[]>('/stats/top-products', { branchId: branchId || undefined }),
+  });
+}
+
+// ===========================================================================
+// DISPOSALS
+// ===========================================================================
+export function useDisposals(params?: { search?: string; branchId?: string; startDate?: string; endDate?: string }) {
+  return useQuery({
+    queryKey: ['disposals', params ?? {}],
+    queryFn: async () => {
+      const res = await api.get('/disposals', {
+        params: {
+          limit: 200,
+          search: params?.search || undefined,
+          branchId: params?.branchId || undefined,
+          startDate: params?.startDate || undefined,
+          endDate: params?.endDate || undefined,
+        },
+      });
+      return {
+        data: (res.data.data ?? []) as Disposal[],
+        summary: (res.data.summary ?? { totalValue: 0, totalQuantity: 0, count: 0 }) as DisposalSummary,
+      };
+    },
+  });
+}
+
+export function useCreateDisposal() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: (body: { branchId?: string; productId: string; quantity: number; reason?: string }) =>
+      api.post('/disposals', body).then((r) => r.data.data),
+    onSuccess: () => invalidate(['disposals'], ['products'], ['stats']),
   });
 }

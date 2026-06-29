@@ -183,3 +183,54 @@ export interface FullUser extends UserListItem {
   avatarUrl: string | null;
   deletedAt?: string | null;
 }
+
+
+// ---------------------------------------------------------------------------
+// Disposals + dashboard charts
+// ---------------------------------------------------------------------------
+
+export interface Disposal {
+  id: string;
+  branch: { id: string; name: string } | null;
+  productId: string | null;
+  name: string;
+  brandName: string;
+  quantity: number;
+  unitPrice: number;
+  value: number;
+  reason: string | null;
+  createdBy: string;
+  createdAt: string;
+}
+
+export interface DisposalSummary {
+  totalValue: number;
+  totalQuantity: number;
+  count: number;
+}
+
+export interface SalesOverviewPoint {
+  date: string;
+  total: number;
+  count: number;
+}
+
+export interface TopProduct {
+  name: string;
+  brand: string;
+  quantity: number;
+  revenue: number;
+}
+
+export interface ImportResult {
+  created: number;
+  updated: number;
+  total: number;
+  warnings: string[];
+}
+
+export interface RestockResult {
+  updated: number;
+  total: number;
+  warnings: string[];
+}
