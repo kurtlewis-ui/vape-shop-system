@@ -72,6 +72,20 @@ export class UsersController {
     };
   }
 
+  @Get('archived')
+  @Roles('Owner', 'Admin')
+  @ApiOperation({ summary: 'List archived (soft-deleted) users' })
+  @ApiResponse({ status: 200, description: 'Archived users retrieved' })
+  async findArchived(@Query() query: QueryUserDto) {
+    const result = await this.usersService.findArchived(query);
+
+    return {
+      success: true,
+      data: result.data,
+      pagination: result.pagination,
+    };
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get user by ID' })
   @ApiResponse({ status: 200, description: 'User retrieved successfully' })
@@ -133,6 +147,23 @@ export class UsersController {
       resetPasswordDto.confirmPassword,
       user.userId,
     );
+
+    return {
+      success: true,
+      data: result,
+    };
+  }
+
+  @Post(':id/restore')
+  @Roles('Owner', 'Admin')
+  @ApiOperation({ summary: 'Restore an archived user' })
+  @ApiResponse({ status: 200, description: 'User restored successfully' })
+  @ApiResponse({ status: 404, description: 'Archived user not found' })
+  async restore(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: RequestUser,
+  ) {
+    const result = await this.usersService.restore(id, user.userId);
 
     return {
       success: true,

@@ -51,12 +51,34 @@ export class BranchesController {
     return { success: true, data };
   }
 
+  @Get('archived')
+  @Roles('Owner', 'Admin')
+  @ApiOperation({ summary: 'List archived (soft-deleted) branches' })
+  @ApiResponse({ status: 200, description: 'Archived branches retrieved' })
+  async findArchived() {
+    const data = await this.branchesService.findArchived();
+    return { success: true, data };
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get a branch by ID' })
   @ApiResponse({ status: 200, description: 'Branch retrieved' })
   @ApiResponse({ status: 404, description: 'Branch not found' })
   async findOne(@Param('id', ParseUUIDPipe) id: string) {
     const data = await this.branchesService.findOne(id);
+    return { success: true, data };
+  }
+
+  @Post(':id/restore')
+  @Roles('Owner', 'Admin')
+  @ApiOperation({ summary: 'Restore an archived branch' })
+  @ApiResponse({ status: 200, description: 'Branch restored' })
+  @ApiResponse({ status: 404, description: 'Archived branch not found' })
+  async restore(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: RequestUser,
+  ) {
+    const data = await this.branchesService.restore(id, user.userId);
     return { success: true, data };
   }
 
