@@ -1,0 +1,416 @@
+'use client';
+
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type QueryKey,
+} from '@tanstack/react-query';
+import { api } from './api';
+import type {
+  ActivityLog,
+  Branch,
+  Brand,
+  DashboardStats,
+  FullUser,
+  Pagination,
+  Product,
+  RoleOption,
+  Sale,
+  SalesSummary,
+} from './types';
+
+// Every backend response is wrapped as { success, data, pagination?, summary? }.
+async function getData<T>(url: string, params?: Record<string, unknown>): Promise<T> {
+  const res = await api.get(url, { params });
+  return res.data.data as T;
+}
+
+interface ListResult<T> {
+  data: T[];
+  pagination?: Pagination;
+  summary?: SalesSummary;
+}
+
+async function getList<T>(
+  url: string,
+  params?: Record<string, unknown>,
+): Promise<ListResult<T>> {
+  const res = await api.get(url, { params });
+  return {
+    data: (res.data.data ?? []) as T[],
+    pagination: res.data.pagination,
+    summary: res.data.summary,
+  };
+}
+
+// Helper to invalidate several query-key prefixes after a mutation.
+function useInvalidate() {
+  const qc = useQueryClient();
+  return (...keys: QueryKey[]) =>
+    keys.forEach((key) => qc.invalidateQueries({ queryKey: key }));
+}
+
+// ===========================================================================
+// BRANCHES (Shops)
+// ===========================================================================
+export function useBranches() {
+  return useQuery({
+    queryKey: ['branches'],
+    queryFn: () => getList<Branch>('/branches', { limit: 200 }),
+  });
+}
+
+export function useArchivedBranches() {
+  return useQuery({
+    queryKey: ['branches', 'archived'],
+    queryFn: () => getData<Branch[]>('/branches/archived'),
+  });
+}
+
+export function useCreateBranch() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: (body: { name: string; address?: string }) =>
+      api.post('/branches', body).then((r) => r.data.data),
+    onSuccess: () => invalidate(['branches'], ['stats']),
+  });
+}
+
+export function useUpdateBranch() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: ({ id, ...body }: { id: string; name?: string; address?: string }) =>
+      api.patch(`/branches/${id}`, body).then((r) => r.data.data),
+    onSuccess: () => invalidate(['branches']),
+  });
+}
+
+export function useArchiveBranch() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: (id: string) => api.delete(`/branches/${id}`).then((r) => r.data.data),
+    onSuccess: () => invalidate(['branches'], ['stats']),
+  });
+}
+
+export function useRestoreBranch() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: (id: string) =>
+      api.post(`/branches/${id}/restore`).then((r) => r.data.data),
+    onSuccess: () => invalidate(['branches'], ['stats']),
+  });
+}
+
+// ===========================================================================
+// BRANDS
+// ===========================================================================
+export function useBrands(search?: string) {
+  return useQuery({
+    queryKey: ['brands', { search }],
+    queryFn: () => getList<Brand>('/brands', { limit: 200, search: search || undefined }),
+  });
+}
+
+export function useArchivedBrands() {
+  return useQuery({
+    queryKey: ['brands', 'archived'],
+    queryFn: () => getList<Brand>('/brands/archived', { limit: 200 }),
+  });
+}
+
+export function useCreateBrand() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: (body: { name: string; coverImage?: string }) =>
+      api.post('/brands', body).then((r) => r.data.data),
+    onSuccess: () => invalidate(['brands'], ['stats']),
+  });
+}
+
+export function useUpdateBrand() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: ({ id, ...body }: { id: string; name?: string; coverImage?: string }) =>
+      api.patch(`/brands/${id}`, body).then((r) => r.data.data),
+    onSuccess: () => invalidate(['brands']),
+  });
+}
+
+export function useArchiveBrand() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: (id: string) => api.delete(`/brands/${id}`).then((r) => r.data.data),
+    onSuccess: () => invalidate(['brands'], ['stats']),
+  });
+}
+
+export function useRestoreBrand() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: (id: string) => api.post(`/brands/${id}/restore`).then((r) => r.data.data),
+    onSuccess: () => invalidate(['brands'], ['stats']),
+  });
+}
+
+// ===========================================================================
+// PRODUCTS
+// ===========================================================================
+export interface ProductMutationInput {
+  name: string;
+  brandId: string;
+  sellingPrice: number;
+  quantityAlert?: number;
+  quantities?: { branchId: string; quantity: number }[];
+}
+
+export function useProducts(params?: { search?: string; brandId?: string; branchId?: string }) {
+  return useQuery({
+    queryKey: ['products', params ?? {}],
+    queryFn: () =>
+      getList<Product>('/products', {
+        limit: 200,
+        search: params?.search || undefined,
+        brandId: params?.brandId || undefined,
+        branchId: params?.branchId || undefined,
+      }),
+  });
+}
+
+export function useArchivedProducts() {
+  return useQuery({
+    queryKey: ['products', 'archived'],
+    queryFn: () => getList<Product>('/products/archived', { limit: 200 }),
+  });
+}
+
+export function useCreateProduct() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: (body: ProductMutationInput) =>
+      api.post('/products', body).then((r) => r.data.data),
+    onSuccess: () => invalidate(['products'], ['stats']),
+  });
+}
+
+export function useUpdateProduct() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: ({ id, ...body }: ProductMutationInput & { id: string }) =>
+      api.patch(`/products/${id}`, body).then((r) => r.data.data),
+    onSuccess: () => invalidate(['products']),
+  });
+}
+
+export function useArchiveProduct() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: (id: string) => api.delete(`/products/${id}`).then((r) => r.data.data),
+    onSuccess: () => invalidate(['products'], ['stats']),
+  });
+}
+
+export function useRestoreProduct() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: (id: string) =>
+      api.post(`/products/${id}/restore`).then((r) => r.data.data),
+    onSuccess: () => invalidate(['products'], ['stats']),
+  });
+}
+
+// ===========================================================================
+// USERS
+// ===========================================================================
+export function useUsers(search?: string) {
+  return useQuery({
+    queryKey: ['users', { search }],
+    queryFn: () => getList<FullUser>('/users', { limit: 200, search: search || undefined }),
+  });
+}
+
+export function useArchivedUsers() {
+  return useQuery({
+    queryKey: ['users', 'archived'],
+    queryFn: () => getList<FullUser>('/users/archived', { limit: 200 }),
+  });
+}
+
+export function useRoles() {
+  return useQuery({
+    queryKey: ['roles'],
+    queryFn: () => getData<RoleOption[]>('/users/roles'),
+  });
+}
+
+export interface UserCreateInput {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  middleInitial?: string;
+  roleId: string;
+  branchId?: string;
+}
+
+export function useCreateUser() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: (body: UserCreateInput) =>
+      api.post('/users', body).then((r) => r.data.data),
+    onSuccess: () => invalidate(['users'], ['stats']),
+  });
+}
+
+export interface UserUpdateInput {
+  id: string;
+  firstName?: string;
+  lastName?: string;
+  middleInitial?: string;
+  email?: string;
+  roleId?: string;
+  branchId?: string | null;
+  isActive?: boolean;
+}
+
+export function useUpdateUser() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: ({ id, ...body }: UserUpdateInput) =>
+      api.patch(`/users/${id}`, body).then((r) => r.data.data),
+    onSuccess: () => invalidate(['users']),
+  });
+}
+
+export function useResetUserPassword() {
+  return useMutation({
+    mutationFn: ({ id, newPassword, confirmPassword }: { id: string; newPassword: string; confirmPassword: string }) =>
+      api.patch(`/users/${id}/password`, { newPassword, confirmPassword }).then((r) => r.data.data),
+  });
+}
+
+export function useArchiveUser() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: (id: string) => api.delete(`/users/${id}`).then((r) => r.data),
+    onSuccess: () => invalidate(['users'], ['stats']),
+  });
+}
+
+export function useRestoreUser() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: (id: string) => api.post(`/users/${id}/restore`).then((r) => r.data.data),
+    onSuccess: () => invalidate(['users'], ['stats']),
+  });
+}
+
+// ===========================================================================
+// SALES
+// ===========================================================================
+export interface SaleItemInput {
+  productId: string;
+  quantity: number;
+}
+
+export interface SaleCreateInput {
+  branchId?: string;
+  customerName?: string;
+  paymentMethod: 'Cash' | 'Gcash';
+  items: SaleItemInput[];
+}
+
+export function useSalesRecords(params?: {
+  search?: string;
+  branchId?: string;
+  startDate?: string;
+  endDate?: string;
+}) {
+  return useQuery({
+    queryKey: ['sales', 'records', params ?? {}],
+    queryFn: () =>
+      getList<Sale>('/sales/records', {
+        limit: 200,
+        search: params?.search || undefined,
+        branchId: params?.branchId || undefined,
+        startDate: params?.startDate || undefined,
+        endDate: params?.endDate || undefined,
+      }),
+  });
+}
+
+export function useSalesPending(params?: { search?: string; branchId?: string }) {
+  return useQuery({
+    queryKey: ['sales', 'pending', params ?? {}],
+    queryFn: () =>
+      getList<Sale>('/sales/pending', {
+        limit: 200,
+        search: params?.search || undefined,
+        branchId: params?.branchId || undefined,
+      }),
+  });
+}
+
+export function useCreateSale() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: (body: SaleCreateInput) => api.post('/sales', body).then((r) => r.data.data),
+    onSuccess: () => invalidate(['sales'], ['stats']),
+  });
+}
+
+export function useUpdateSale() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: ({ id, ...body }: { id: string } & Partial<SaleCreateInput>) =>
+      api.patch(`/sales/${id}`, body).then((r) => r.data.data),
+    onSuccess: () => invalidate(['sales']),
+  });
+}
+
+export function useApproveSale() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: (id: string) => api.post(`/sales/${id}/approve`).then((r) => r.data.data),
+    onSuccess: () => invalidate(['sales'], ['products'], ['stats']),
+  });
+}
+
+export function useDeclineSale() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: (id: string) => api.post(`/sales/${id}/decline`).then((r) => r.data.data),
+    onSuccess: () => invalidate(['sales'], ['stats']),
+  });
+}
+
+export function useDeleteSale() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: (id: string) => api.delete(`/sales/${id}`).then((r) => r.data.data),
+    onSuccess: () => invalidate(['sales'], ['stats']),
+  });
+}
+
+// ===========================================================================
+// STATS + ACTIVITY LOGS
+// ===========================================================================
+export function useDashboardStats() {
+  return useQuery({
+    queryKey: ['stats', 'dashboard'],
+    queryFn: () => getData<DashboardStats>('/stats/dashboard'),
+  });
+}
+
+export function useActivityLogs(params?: { search?: string; category?: string }) {
+  return useQuery({
+    queryKey: ['activity-logs', params ?? {}],
+    queryFn: () =>
+      getList<ActivityLog>('/activity-logs', {
+        limit: 100,
+        search: params?.search || undefined,
+        category: params?.category && params.category !== 'All' ? params.category : undefined,
+      }),
+  });
+}

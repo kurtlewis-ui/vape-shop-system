@@ -1,28 +1,25 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, Search, Pencil, Trash2, X, ImageIcon } from 'lucide-react';
-
-interface Brand {
-  id: number;
-  name: string;
-  slug: string;
-  coverImage: string | null;
-}
-
-const initialBrands: Brand[] = [
-  { id: 1, name: 'BRAND A', slug: 'brand-a', coverImage: null },
-  { id: 2, name: 'BRAND B', slug: 'brand-b', coverImage: null },
-  { id: 3, name: 'BRAND C', slug: 'brand-c', coverImage: null },
-];
-
-function generateSlug(name: string) {
-  return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-}
+import { Plus, Search, Pencil, Trash2, X, Loader2 } from 'lucide-react';
+import {
+  useBrands,
+  useCreateBrand,
+  useUpdateBrand,
+  useArchiveBrand,
+} from '@/lib/hooks';
+import { getApiErrorMessage } from '@/lib/api';
+import type { Brand } from '@/lib/types';
 
 export default function BrandsPage() {
-  const [brands, setBrands] = useState<Brand[]>(initialBrands);
   const [search, setSearch] = useState('');
+  const { data, isLoading, isError, error } = useBrands(search);
+  const createBrand = useCreateBrand();
+  const updateBrand = useUpdateBrand();
+  const archiveBrand = useArchiveBrand();
+
+  const brands = data?.data ?? [];
+
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showArchiveModal, setShowArchiveModal] = useState(false);
@@ -31,38 +28,34 @@ export default function BrandsPage() {
   const [formName, setFormName] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
 
-  const filteredBrands = brands.filter(
-    (b) => b.name.toLowerCase().includes(search.toLowerCase()) || b.slug.includes(search.toLowerCase())
-  );
-
-  function handleAdd() {
+  async function handleAdd() {
     if (!formName.trim()) { setFormError('Brand name is required.'); return; }
     setFormError(null);
-    const newBrand: Brand = {
-      id: Date.now(),
-      name: formName.trim().toUpperCase(),
-      slug: generateSlug(formName.trim()),
-      coverImage: null,
-    };
-    setBrands([...brands, newBrand]);
-    setFormName('');
-    setShowAddModal(false);
+    try {
+      await createBrand.mutateAsync({ name: formName.trim() });
+      setFormName('');
+      setShowAddModal(false);
+    } catch (e) { setFormError(getApiErrorMessage(e)); }
   }
 
-  function handleEdit() {
+  async function handleEdit() {
     if (!editingBrand || !formName.trim()) { setFormError('Brand name is required.'); return; }
     setFormError(null);
-    setBrands(brands.map((b) => (b.id === editingBrand.id ? { ...b, name: formName.trim().toUpperCase(), slug: generateSlug(formName.trim()) } : b)));
-    setFormName('');
-    setEditingBrand(null);
-    setShowEditModal(false);
+    try {
+      await updateBrand.mutateAsync({ id: editingBrand.id, name: formName.trim() });
+      setFormName('');
+      setEditingBrand(null);
+      setShowEditModal(false);
+    } catch (e) { setFormError(getApiErrorMessage(e)); }
   }
 
-  function handleArchive() {
+  async function handleArchive() {
     if (!archivingBrand) return;
-    setBrands(brands.filter((b) => b.id !== archivingBrand.id));
-    setArchivingBrand(null);
-    setShowArchiveModal(false);
+    try {
+      await archiveBrand.mutateAsync(archivingBrand.id);
+      setArchivingBrand(null);
+      setShowArchiveModal(false);
+    } catch (e) { setFormError(getApiErrorMessage(e)); }
   }
 
   return (
@@ -97,14 +90,19 @@ export default function BrandsPage() {
               <th className="text-left px-4 py-3 text-xs font-semibold uppercase text-table-header-text w-28">Cover Image</th>
               <th className="text-left px-4 py-3 text-xs font-semibold uppercase text-table-header-text">Name</th>
               <th className="text-left px-4 py-3 text-xs font-semibold uppercase text-table-header-text">Slug</th>
+              <th className="text-left px-4 py-3 text-xs font-semibold uppercase text-table-header-text">Products</th>
               <th className="text-right px-4 py-3 text-xs font-semibold uppercase text-table-header-text w-24"></th>
             </tr>
           </thead>
           <tbody>
-            {filteredBrands.length === 0 ? (
-              <tr><td colSpan={5} className="text-center py-8 text-text-muted">No brands found.</td></tr>
+            {isLoading ? (
+              <tr><td colSpan={6} className="text-center py-8 text-text-muted"><Loader2 className="inline animate-spin mr-2" size={16} />Loading brands...</td></tr>
+            ) : isError ? (
+              <tr><td colSpan={6} className="text-center py-8 text-accent-red">{getApiErrorMessage(error)}</td></tr>
+            ) : brands.length === 0 ? (
+              <tr><td colSpan={6} className="text-center py-8 text-text-muted">No brands found.</td></tr>
             ) : (
-              filteredBrands.map((brand, i) => (
+              brands.map((brand, i) => (
                 <tr key={brand.id} className="border-t border-card-border hover:bg-white/5 transition-colors">
                   <td className="px-4 py-3 text-sm text-accent-blue font-medium">{i + 1}</td>
                   <td className="px-4 py-3 text-sm text-text-muted">
@@ -118,6 +116,7 @@ export default function BrandsPage() {
                   </td>
                   <td className="px-4 py-3 text-sm font-bold text-text-primary">{brand.name}</td>
                   <td className="px-4 py-3 text-sm text-accent-blue">{brand.slug}</td>
+                  <td className="px-4 py-3 text-sm text-text-secondary">{brand.productCount}</td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-2">
                       <button
@@ -127,7 +126,7 @@ export default function BrandsPage() {
                         <Pencil size={16} />
                       </button>
                       <button
-                        onClick={() => { setArchivingBrand(brand); setShowArchiveModal(true); }}
+                        onClick={() => { setArchivingBrand(brand); setFormError(null); setShowArchiveModal(true); }}
                         className="icon-btn text-accent-red hover:bg-accent-red/10"
                       >
                         <Trash2 size={16} />
@@ -141,7 +140,6 @@ export default function BrandsPage() {
         </table>
       </div>
 
-      {/* Add Modal */}
       {showAddModal && (
         <Modal title="Add New Brand" onClose={() => setShowAddModal(false)}>
           <div className="space-y-4">
@@ -149,21 +147,14 @@ export default function BrandsPage() {
               <label className="block text-sm font-medium text-text-primary mb-1">Name</label>
               <input type="text" value={formName} onChange={(e) => setFormName(e.target.value)} className="w-full border border-input-border rounded px-3 py-2 text-sm text-text-primary bg-input-bg focus:outline-none focus:border-input-focus" />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-text-primary mb-1">Cover Image</label>
-              <input type="file" accept="image/*" className="w-full border border-input-border rounded px-3 py-2 text-sm text-text-primary bg-input-bg" />
-            </div>
-            {formError && (
-              <p className="text-sm text-accent-red">{formError}</p>
-            )}
+            {formError && <p className="text-sm text-accent-red">{formError}</p>}
             <div className="flex justify-end">
-              <button onClick={handleAdd} className="btn-grad px-4 py-2 rounded-lg text-sm font-medium">Save Brand</button>
+              <button onClick={handleAdd} disabled={createBrand.isPending} className="btn-grad px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-60">{createBrand.isPending ? 'Saving...' : 'Save Brand'}</button>
             </div>
           </div>
         </Modal>
       )}
 
-      {/* Edit Modal */}
       {showEditModal && editingBrand && (
         <Modal title="Edit Brand" onClose={() => { setShowEditModal(false); setEditingBrand(null); }}>
           <div className="space-y-4">
@@ -171,28 +162,22 @@ export default function BrandsPage() {
               <label className="block text-sm font-medium text-text-primary mb-1">Name</label>
               <input type="text" value={formName} onChange={(e) => setFormName(e.target.value)} className="w-full border border-input-border rounded px-3 py-2 text-sm text-text-primary bg-input-bg focus:outline-none focus:border-input-focus" />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-text-primary mb-1">Cover Image</label>
-              <input type="file" accept="image/*" className="w-full border border-input-border rounded px-3 py-2 text-sm text-text-primary bg-input-bg" />
-            </div>
-            {formError && (
-              <p className="text-sm text-accent-red">{formError}</p>
-            )}
+            {formError && <p className="text-sm text-accent-red">{formError}</p>}
             <div className="flex justify-end">
-              <button onClick={handleEdit} className="btn-grad px-4 py-2 rounded-lg text-sm font-medium">Save Brand</button>
+              <button onClick={handleEdit} disabled={updateBrand.isPending} className="btn-grad px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-60">{updateBrand.isPending ? 'Saving...' : 'Save Brand'}</button>
             </div>
           </div>
         </Modal>
       )}
 
-      {/* Archive Modal */}
       {showArchiveModal && archivingBrand && (
         <Modal title="Confirm Archive" onClose={() => { setShowArchiveModal(false); setArchivingBrand(null); }}>
           <div className="space-y-4">
             <p className="text-sm text-text-primary">Are you sure you want to archive <strong>{archivingBrand.name}</strong>?</p>
+            {formError && <p className="text-sm text-accent-red">{formError}</p>}
             <div className="flex justify-end gap-2">
               <button onClick={() => { setShowArchiveModal(false); setArchivingBrand(null); }} className="bg-white/10 text-text-primary px-4 py-2 rounded text-sm font-medium hover:opacity-90 transition">Cancel</button>
-              <button onClick={handleArchive} className="bg-btn-danger text-white px-4 py-2 rounded text-sm font-medium hover:opacity-90 transition">Yes, Archive</button>
+              <button onClick={handleArchive} disabled={archiveBrand.isPending} className="bg-btn-danger text-white px-4 py-2 rounded text-sm font-medium hover:opacity-90 transition disabled:opacity-60">{archiveBrand.isPending ? 'Archiving...' : 'Yes, Archive'}</button>
             </div>
           </div>
         </Modal>

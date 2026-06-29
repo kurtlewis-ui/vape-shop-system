@@ -60,6 +60,7 @@ export class UsersService {
         passwordHash,
         firstName: createUserDto.firstName,
         lastName: createUserDto.lastName,
+        middleInitial: createUserDto.middleInitial?.trim() || null,
         roleId: createUserDto.roleId,
         phone: createUserDto.phone,
         branchId: createUserDto.branchId ?? null,

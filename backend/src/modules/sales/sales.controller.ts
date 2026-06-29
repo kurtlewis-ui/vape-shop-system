@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   ParseUUIDPipe,
+  Patch,
   Post,
   Query,
   UseGuards,
@@ -12,6 +13,7 @@ import {
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { SalesService } from './sales.service';
 import { CreateSaleDto } from './dto/create-sale.dto';
+import { UpdateSaleDto } from './dto/update-sale.dto';
 import { QuerySaleDto } from './dto/query-sale.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -60,6 +62,17 @@ export class SalesController {
   @ApiOperation({ summary: 'Get a sale by ID' })
   async findOne(@Param('id', ParseUUIDPipe) id: string) {
     const data = await this.salesService.findOne(id);
+    return { success: true, data };
+  }
+
+  @Patch(':id')
+  @ApiOperation({ summary: 'Edit a pending sale (items, payment method, customer)' })
+  async update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateSaleDto,
+    @CurrentUser() user: RequestUser,
+  ) {
+    const data = await this.salesService.update(id, dto, user);
     return { success: true, data };
   }
 

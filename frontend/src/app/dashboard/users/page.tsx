@@ -1,7 +1,18 @@
 'use client';
 
-import { useState } from 'react';
-import { Search, Plus, Pencil, Trash2, X, Eye, EyeOff, RefreshCw } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { Search, Plus, Pencil, Trash2, X, Eye, EyeOff, RefreshCw, Loader2 } from 'lucide-react';
+import {
+  useUsers,
+  useRoles,
+  useBranches,
+  useCreateUser,
+  useUpdateUser,
+  useResetUserPassword,
+  useArchiveUser,
+} from '@/lib/hooks';
+import { getApiErrorMessage } from '@/lib/api';
+import type { FullUser } from '@/lib/types';
 
 function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
   return (
@@ -18,269 +29,221 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
   );
 }
 
-interface User {
-  id: number;
+interface FormData {
   firstName: string;
   middleInitial: string;
   lastName: string;
   email: string;
-  role: 'Admin' | 'Staff';
-  shop: string;
-  status: 'Active' | 'Disabled';
-  image: string;
+  roleId: string;
+  branchId: string;
+  isActive: boolean;
+  password: string;
+  confirmPassword: string;
 }
 
-const mockUsers: User[] = [
-  { id: 1, firstName: 'John', middleInitial: 'A', lastName: 'Doe', email: 'john.doe@vapeshop.com', role: 'Admin', shop: 'N/A', status: 'Active', image: '' },
-  { id: 2, firstName: 'Jane', middleInitial: 'B', lastName: 'Smith', email: 'jane.smith@vapeshop.com', role: 'Admin', shop: 'N/A', status: 'Active', image: '' },
-  { id: 3, firstName: 'Mike', middleInitial: 'C', lastName: 'Johnson', email: 'mike.johnson@vapeshop.com', role: 'Admin', shop: 'N/A', status: 'Active', image: '' },
-  { id: 4, firstName: 'Sarah', middleInitial: 'D', lastName: 'Williams', email: 'sarah.williams@vapeshop.com', role: 'Staff', shop: 'Downtown Branch', status: 'Active', image: '' },
-  { id: 5, firstName: 'Tom', middleInitial: 'E', lastName: 'Brown', email: 'tom.brown@vapeshop.com', role: 'Staff', shop: 'Mall Branch', status: 'Active', image: '' },
-  { id: 6, firstName: 'Emily', middleInitial: 'F', lastName: 'Davis', email: 'emily.davis@vapeshop.com', role: 'Staff', shop: 'Uptown Branch', status: 'Disabled', image: '' },
-  { id: 7, firstName: 'Chris', middleInitial: 'G', lastName: 'Wilson', email: 'chris.wilson@vapeshop.com', role: 'Staff', shop: 'Downtown Branch', status: 'Active', image: '' },
-];
-
-const branches = ['Downtown Branch', 'Mall Branch', 'Uptown Branch', 'Eastside Branch'];
-
 export default function UsersPage() {
-  const [users, setUsers] = useState<User[]>(mockUsers);
   const [search, setSearch] = useState('');
+  const { data, isLoading, isError, error } = useUsers(search);
+  const { data: roles = [] } = useRoles();
+  const { data: branchData } = useBranches();
+  const branches = branchData?.data ?? [];
+
+  const createUser = useCreateUser();
+  const updateUser = useUpdateUser();
+  const resetPassword = useResetUserPassword();
+  const archiveUser = useArchiveUser();
+
+  const users = data?.data ?? [];
+
   const [entriesPerPage, setEntriesPerPage] = useState<number | 'All'>(10);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showArchiveModal, setShowArchiveModal] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedUser, setSelectedUser] = useState<FullUser | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [formError, setFormError] = useState<string | null>(null);
 
-  // Form state
-  const [formData, setFormData] = useState({
-    firstName: '',
-    middleInitial: '',
-    lastName: '',
-    email: '',
-    role: 'Staff' as 'Admin' | 'Staff',
-    shop: branches[0],
-    status: 'Active' as 'Active' | 'Disabled',
-    password: '',
-    confirmPassword: '',
-    image: null as File | null,
+  const staffRoleId = useMemo(() => roles.find((r) => r.name === 'Staff')?.id, [roles]);
+
+  const [formData, setFormData] = useState<FormData>({
+    firstName: '', middleInitial: '', lastName: '', email: '',
+    roleId: '', branchId: '', isActive: true, password: '', confirmPassword: '',
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const filteredUsers = users.filter(
-    (u) =>
-      `${u.firstName} ${u.lastName}`.toLowerCase().includes(search.toLowerCase()) ||
-      u.email.toLowerCase().includes(search.toLowerCase())
-  );
+  const selectedRoleName = roles.find((r) => r.id === formData.roleId)?.name;
+  const isStaffRole = selectedRoleName === 'Staff';
 
-  const totalPages = entriesPerPage === 'All' ? 1 : Math.max(1, Math.ceil(filteredUsers.length / entriesPerPage));
+  const totalPages = entriesPerPage === 'All' ? 1 : Math.max(1, Math.ceil(users.length / entriesPerPage));
   const pageStart = entriesPerPage === 'All' ? 0 : (currentPage - 1) * entriesPerPage;
-  const displayedUsers =
-    entriesPerPage === 'All' ? filteredUsers : filteredUsers.slice(pageStart, pageStart + entriesPerPage);
+  const displayedUsers = entriesPerPage === 'All' ? users : users.slice(pageStart, pageStart + entriesPerPage);
 
   const resetForm = () => {
     setFormData({
-      firstName: '',
-      middleInitial: '',
-      lastName: '',
-      email: '',
-      role: 'Staff',
-      shop: branches[0],
-      status: 'Active',
-      password: '',
-      confirmPassword: '',
-      image: null,
+      firstName: '', middleInitial: '', lastName: '', email: '',
+      roleId: roles.find((r) => r.name === 'Staff')?.id ?? roles[0]?.id ?? '',
+      branchId: branches[0]?.id ?? '', isActive: true, password: '', confirmPassword: '',
     });
     setShowPassword(false);
     setShowConfirmPassword(false);
     setFormError(null);
   };
 
-  const handleAdd = () => {
-    resetForm();
-    setShowAddModal(true);
-  };
+  const handleAdd = () => { resetForm(); setShowAddModal(true); };
 
-  const handleEdit = (user: User) => {
+  const handleEdit = (user: FullUser) => {
     setSelectedUser(user);
     setFormError(null);
     setFormData({
       firstName: user.firstName,
-      middleInitial: user.middleInitial,
+      middleInitial: user.middleInitial ?? '',
       lastName: user.lastName,
       email: user.email,
-      role: user.role,
-      shop: user.shop === 'N/A' ? branches[0] : user.shop,
-      status: user.status,
+      roleId: user.role.id,
+      branchId: user.branchId ?? branches[0]?.id ?? '',
+      isActive: user.isActive,
       password: '',
       confirmPassword: '',
-      image: null,
     });
     setShowEditModal(true);
   };
 
-  const handleArchive = (user: User) => {
-    setSelectedUser(user);
-    setShowArchiveModal(true);
+  const handleArchive = (user: FullUser) => { setSelectedUser(user); setFormError(null); setShowArchiveModal(true); };
+
+  const confirmArchive = async () => {
+    if (!selectedUser) return;
+    try {
+      await archiveUser.mutateAsync(selectedUser.id);
+      setShowArchiveModal(false);
+      setSelectedUser(null);
+    } catch (e) { setFormError(getApiErrorMessage(e)); }
   };
 
-  const confirmArchive = () => {
-    if (selectedUser) {
-      setUsers(users.filter((u) => u.id !== selectedUser.id));
-    }
-    setShowArchiveModal(false);
-    setSelectedUser(null);
-  };
-
-  const handleSaveUser = () => {
+  const validate = (requirePassword: boolean) => {
     if (!formData.firstName.trim() || !formData.lastName.trim() || !formData.email.trim()) {
       setFormError('First name, last name and email are required.');
-      return;
+      return false;
     }
-    if ((formData.password || formData.confirmPassword) && formData.password !== formData.confirmPassword) {
+    if (!formData.roleId) { setFormError('Please select a role.'); return false; }
+    if (isStaffRole && !formData.branchId) { setFormError('Staff must be assigned to a shop.'); return false; }
+    if ((requirePassword || formData.password || formData.confirmPassword) && formData.password !== formData.confirmPassword) {
       setFormError('Passwords do not match.');
-      return;
+      return false;
     }
+    if (requirePassword && !formData.password) { setFormError('Password is required.'); return false; }
     setFormError(null);
-    const newUser: User = {
-      id: Math.max(...users.map((u) => u.id)) + 1,
-      firstName: formData.firstName,
-      middleInitial: formData.middleInitial,
-      lastName: formData.lastName,
-      email: formData.email,
-      role: formData.role,
-      shop: formData.role === 'Admin' ? 'N/A' : formData.shop,
-      status: formData.status,
-      image: '',
-    };
-    setUsers([...users, newUser]);
-    setShowAddModal(false);
+    return true;
   };
 
-  const handleUpdateUser = () => {
-    if (!formData.firstName.trim() || !formData.lastName.trim() || !formData.email.trim()) {
-      setFormError('First name, last name and email are required.');
-      return;
-    }
-    if ((formData.password || formData.confirmPassword) && formData.password !== formData.confirmPassword) {
-      setFormError('Passwords do not match.');
-      return;
-    }
-    setFormError(null);
-    if (selectedUser) {
-      setUsers(
-        users.map((u) =>
-          u.id === selectedUser.id
-            ? {
-                ...u,
-                firstName: formData.firstName,
-                middleInitial: formData.middleInitial,
-                lastName: formData.lastName,
-                email: formData.email,
-                role: formData.role,
-                shop: formData.role === 'Admin' ? 'N/A' : formData.shop,
-                status: formData.status,
-              }
-            : u
-        )
-      );
-    }
-    setShowEditModal(false);
-    setSelectedUser(null);
+  const handleSaveUser = async () => {
+    if (!validate(true)) return;
+    try {
+      await createUser.mutateAsync({
+        email: formData.email.trim(),
+        password: formData.password,
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        middleInitial: formData.middleInitial.trim() || undefined,
+        roleId: formData.roleId,
+        branchId: isStaffRole ? formData.branchId : undefined,
+      });
+      setShowAddModal(false);
+    } catch (e) { setFormError(getApiErrorMessage(e)); }
+  };
+
+  const handleUpdateUser = async () => {
+    if (!selectedUser || !validate(false)) return;
+    try {
+      await updateUser.mutateAsync({
+        id: selectedUser.id,
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        middleInitial: formData.middleInitial.trim() || undefined,
+        email: formData.email.trim(),
+        roleId: formData.roleId,
+        branchId: isStaffRole ? formData.branchId : null,
+        isActive: formData.isActive,
+      });
+      if (formData.password) {
+        await resetPassword.mutateAsync({
+          id: selectedUser.id,
+          newPassword: formData.password,
+          confirmPassword: formData.confirmPassword,
+        });
+      }
+      setShowEditModal(false);
+      setSelectedUser(null);
+    } catch (e) { setFormError(getApiErrorMessage(e)); }
   };
 
   const generatePassword = () => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%';
-    let password = '';
-    for (let i = 0; i < 12; i++) {
-      password += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    setFormData({ ...formData, password, confirmPassword: password });
+    // Guarantee at least one of each required class for the backend policy.
+    const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+    const lower = 'abcdefghijkmnpqrstuvwxyz';
+    const nums = '23456789';
+    const special = '!@#$%*?';
+    const all = upper + lower + nums + special;
+    let pwd = upper[Math.floor(Math.random() * upper.length)]
+      + lower[Math.floor(Math.random() * lower.length)]
+      + nums[Math.floor(Math.random() * nums.length)]
+      + special[Math.floor(Math.random() * special.length)];
+    for (let i = 0; i < 8; i++) pwd += all[Math.floor(Math.random() * all.length)];
+    const shuffled = pwd.split('').sort(() => Math.random() - 0.5).join('');
+    setFormData((f) => ({ ...f, password: shuffled, confirmPassword: shuffled }));
+    setShowPassword(true);
+    setShowConfirmPassword(true);
   };
+
+  const isSaving = createUser.isPending || updateUser.isPending || resetPassword.isPending;
 
   const renderUserForm = (isEdit: boolean) => (
     <div className="space-y-4">
       <div className="grid grid-cols-3 gap-2">
         <div>
           <label className="block text-sm font-medium text-text-primary mb-1">First Name</label>
-          <input
-            type="text"
-            value={formData.firstName}
-            onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-            className="w-full px-3 py-2 border border-input-border rounded-lg bg-input-bg focus:outline-none focus:ring-2 focus:ring-input-focus text-sm"
-          />
+          <input type="text" value={formData.firstName} onChange={(e) => setFormData({ ...formData, firstName: e.target.value })} className="w-full px-3 py-2 border border-input-border rounded-lg bg-input-bg focus:outline-none focus:ring-2 focus:ring-input-focus text-sm" />
         </div>
         <div>
           <label className="block text-sm font-medium text-text-primary mb-1">M.I.</label>
-          <input
-            type="text"
-            value={formData.middleInitial}
-            onChange={(e) => setFormData({ ...formData, middleInitial: e.target.value })}
-            className="w-full px-3 py-2 border border-input-border rounded-lg bg-input-bg focus:outline-none focus:ring-2 focus:ring-input-focus text-sm"
-            maxLength={1}
-          />
+          <input type="text" value={formData.middleInitial} onChange={(e) => setFormData({ ...formData, middleInitial: e.target.value })} className="w-full px-3 py-2 border border-input-border rounded-lg bg-input-bg focus:outline-none focus:ring-2 focus:ring-input-focus text-sm" maxLength={2} />
         </div>
         <div>
           <label className="block text-sm font-medium text-text-primary mb-1">Last Name</label>
-          <input
-            type="text"
-            value={formData.lastName}
-            onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-            className="w-full px-3 py-2 border border-input-border rounded-lg bg-input-bg focus:outline-none focus:ring-2 focus:ring-input-focus text-sm"
-          />
+          <input type="text" value={formData.lastName} onChange={(e) => setFormData({ ...formData, lastName: e.target.value })} className="w-full px-3 py-2 border border-input-border rounded-lg bg-input-bg focus:outline-none focus:ring-2 focus:ring-input-focus text-sm" />
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-2">
         <div>
           <label className="block text-sm font-medium text-text-primary mb-1">Status</label>
-          <select
-            value={formData.status}
-            onChange={(e) => setFormData({ ...formData, status: e.target.value as 'Active' | 'Disabled' })}
-            className="w-full px-3 py-2 border border-input-border rounded-lg bg-input-bg focus:outline-none focus:ring-2 focus:ring-input-focus text-sm"
-          >
+          <select value={formData.isActive ? 'Active' : 'Disabled'} onChange={(e) => setFormData({ ...formData, isActive: e.target.value === 'Active' })} className="w-full px-3 py-2 border border-input-border rounded-lg bg-input-bg focus:outline-none focus:ring-2 focus:ring-input-focus text-sm">
             <option value="Active">Active</option>
             <option value="Disabled">Disabled</option>
           </select>
         </div>
         <div>
           <label className="block text-sm font-medium text-text-primary mb-1">Role</label>
-          <select
-            value={formData.role}
-            onChange={(e) => setFormData({ ...formData, role: e.target.value as 'Admin' | 'Staff' })}
-            className="w-full px-3 py-2 border border-input-border rounded-lg bg-input-bg focus:outline-none focus:ring-2 focus:ring-input-focus text-sm"
-          >
-            <option value="Admin">Admin</option>
-            <option value="Staff">Staff</option>
+          <select value={formData.roleId} onChange={(e) => setFormData({ ...formData, roleId: e.target.value })} className="w-full px-3 py-2 border border-input-border rounded-lg bg-input-bg focus:outline-none focus:ring-2 focus:ring-input-focus text-sm">
+            <option value="">Select role</option>
+            {roles.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
           </select>
         </div>
       </div>
 
-      {formData.role === 'Staff' && (
+      {isStaffRole && (
         <div>
           <label className="block text-sm font-medium text-text-primary mb-1">Shop</label>
-          <select
-            value={formData.shop}
-            onChange={(e) => setFormData({ ...formData, shop: e.target.value })}
-            className="w-full px-3 py-2 border border-input-border rounded-lg bg-input-bg focus:outline-none focus:ring-2 focus:ring-input-focus text-sm"
-          >
-            {branches.map((b) => (
-              <option key={b} value={b}>{b}</option>
-            ))}
+          <select value={formData.branchId} onChange={(e) => setFormData({ ...formData, branchId: e.target.value })} className="w-full px-3 py-2 border border-input-border rounded-lg bg-input-bg focus:outline-none focus:ring-2 focus:ring-input-focus text-sm">
+            <option value="">Select shop</option>
+            {branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
           </select>
         </div>
       )}
 
       <div>
         <label className="block text-sm font-medium text-text-primary mb-1">Email</label>
-        <input
-          type="email"
-          value={formData.email}
-          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-          className="w-full px-3 py-2 border border-input-border rounded-lg bg-input-bg focus:outline-none focus:ring-2 focus:ring-input-focus text-sm"
-        />
+        <input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="w-full px-3 py-2 border border-input-border rounded-lg bg-input-bg focus:outline-none focus:ring-2 focus:ring-input-focus text-sm" />
       </div>
 
       <div>
@@ -289,72 +252,34 @@ export default function UsersPage() {
         </label>
         <div className="flex gap-2">
           <div className="relative flex-1">
-            <input
-              type={showPassword ? 'text' : 'password'}
-              value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              className="w-full px-3 py-2 border border-input-border rounded-lg bg-input-bg focus:outline-none focus:ring-2 focus:ring-input-focus text-sm pr-10"
-              placeholder={isEdit ? 'Leave blank to keep current' : ''}
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary"
-            >
+            <input type={showPassword ? 'text' : 'password'} value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} className="w-full px-3 py-2 border border-input-border rounded-lg bg-input-bg focus:outline-none focus:ring-2 focus:ring-input-focus text-sm pr-10" placeholder={isEdit ? 'Leave blank to keep current' : ''} />
+            <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary">
               {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
           </div>
-          <button
-            type="button"
-            onClick={generatePassword}
-            className="px-3 py-2 bg-accent-blue text-white rounded-lg text-sm flex items-center gap-1 hover:opacity-90"
-          >
+          <button type="button" onClick={generatePassword} className="px-3 py-2 bg-accent-blue text-white rounded-lg text-sm flex items-center gap-1 hover:opacity-90">
             <RefreshCw size={14} /> Generate
           </button>
         </div>
+        <p className="text-xs text-text-muted mt-1">Min 8 chars with uppercase, lowercase, number and a special character.</p>
       </div>
 
       <div>
         <label className="block text-sm font-medium text-text-primary mb-1">Confirm Password</label>
         <div className="relative">
-          <input
-            type={showConfirmPassword ? 'text' : 'password'}
-            value={formData.confirmPassword}
-            onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-            className="w-full px-3 py-2 border border-input-border rounded-lg bg-input-bg focus:outline-none focus:ring-2 focus:ring-input-focus text-sm pr-10"
-          />
-          <button
-            type="button"
-            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary"
-          >
+          <input type={showConfirmPassword ? 'text' : 'password'} value={formData.confirmPassword} onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })} className="w-full px-3 py-2 border border-input-border rounded-lg bg-input-bg focus:outline-none focus:ring-2 focus:ring-input-focus text-sm pr-10" />
+          <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary">
             {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
           </button>
         </div>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-text-primary mb-1">User Image</label>
-        <input
-          type="file"
-          accept="image/*"
-          onChange={(e) => setFormData({ ...formData, image: e.target.files?.[0] || null })}
-          className="w-full px-3 py-2 border border-input-border rounded-lg bg-input-bg text-sm file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-sm file:bg-accent-primary file:text-white"
-        />
-        {isEdit && selectedUser?.image && (
-          <p className="text-xs text-text-muted mt-1">Current image uploaded. Upload new to replace.</p>
-        )}
       </div>
 
       {formError && (
         <div className="rounded-lg bg-accent-red/10 border border-accent-red/30 px-3 py-2 text-sm text-accent-red">{formError}</div>
       )}
 
-      <button
-        onClick={isEdit ? handleUpdateUser : handleSaveUser}
-        className="w-full btn-grad py-2.5 rounded-lg font-medium"
-      >
-        {isEdit ? 'Update User' : 'Save User'}
+      <button onClick={isEdit ? handleUpdateUser : handleSaveUser} disabled={isSaving} className="w-full btn-grad py-2.5 rounded-lg font-medium disabled:opacity-60">
+        {isSaving ? 'Saving...' : isEdit ? 'Update User' : 'Save User'}
       </button>
     </div>
   );
@@ -363,10 +288,7 @@ export default function UsersPage() {
     <div className="p-6 bg-page-bg min-h-screen">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-text-primary">Users</h1>
-        <button
-          onClick={handleAdd}
-          className="flex items-center gap-2 btn-grad px-4 py-2 rounded-lg font-medium"
-        >
+        <button onClick={handleAdd} className="flex items-center gap-2 btn-grad px-4 py-2 rounded-lg font-medium">
           <Plus size={18} /> Add New User
         </button>
       </div>
@@ -375,27 +297,15 @@ export default function UsersPage() {
         <div className="p-4 flex items-center justify-between border-b border-card-border">
           <div className="flex items-center gap-2">
             <label className="text-sm text-text-secondary">Show</label>
-            <select
-              value={entriesPerPage}
-              onChange={(e) => { setEntriesPerPage(e.target.value === 'All' ? 'All' : Number(e.target.value)); setCurrentPage(1); }}
-              className="px-2 py-1 border border-input-border rounded text-sm bg-input-bg focus:outline-none focus:ring-2 focus:ring-input-focus"
-            >
-              {[5, 10, 25, 50, 100].map((n) => (
-                <option key={n} value={n}>{n}</option>
-              ))}
+            <select value={entriesPerPage} onChange={(e) => { setEntriesPerPage(e.target.value === 'All' ? 'All' : Number(e.target.value)); setCurrentPage(1); }} className="px-2 py-1 border border-input-border rounded text-sm bg-input-bg focus:outline-none focus:ring-2 focus:ring-input-focus">
+              {[5, 10, 25, 50, 100].map((n) => <option key={n} value={n}>{n}</option>)}
               <option value="All">All</option>
             </select>
             <span className="text-sm text-text-secondary">entries</span>
           </div>
           <div className="relative">
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
-            <input
-              type="text"
-              placeholder="Search users..."
-              value={search}
-              onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
-              className="pl-9 pr-4 py-2 border border-input-border rounded-lg bg-input-bg text-sm focus:outline-none focus:ring-2 focus:ring-input-focus w-64"
-            />
+            <input type="text" placeholder="Search users..." value={search} onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }} className="pl-9 pr-4 py-2 border border-input-border rounded-lg bg-input-bg text-sm focus:outline-none focus:ring-2 focus:ring-input-focus w-64" />
           </div>
         </div>
 
@@ -414,7 +324,13 @@ export default function UsersPage() {
               </tr>
             </thead>
             <tbody>
-              {displayedUsers.map((user, idx) => (
+              {isLoading ? (
+                <tr><td colSpan={8} className="text-center py-8 text-text-muted"><Loader2 className="inline animate-spin mr-2" size={16} />Loading users...</td></tr>
+              ) : isError ? (
+                <tr><td colSpan={8} className="text-center py-8 text-accent-red">{getApiErrorMessage(error)}</td></tr>
+              ) : displayedUsers.length === 0 ? (
+                <tr><td colSpan={8} className="text-center py-8 text-text-muted">No users found.</td></tr>
+              ) : displayedUsers.map((user, idx) => (
                 <tr key={user.id} className="border-b border-card-border hover:bg-white/5 transition">
                   <td className="px-4 py-3 text-sm text-text-primary">{pageStart + idx + 1}</td>
                   <td className="px-4 py-3">
@@ -423,35 +339,23 @@ export default function UsersPage() {
                     </div>
                   </td>
                   <td className="px-4 py-3 text-sm text-text-primary font-medium">
-                    {user.firstName} {user.middleInitial}. {user.lastName}
+                    {user.firstName} {user.middleInitial ? `${user.middleInitial}. ` : ''}{user.lastName}
                   </td>
                   <td className="px-4 py-3 text-sm text-text-secondary">{user.email}</td>
-                  <td className="px-4 py-3">
-                    <span className="badge badge-neutral">{user.role}</span>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-text-secondary">{user.shop}</td>
+                  <td className="px-4 py-3"><span className="badge badge-neutral">{user.role.name}</span></td>
+                  <td className="px-4 py-3 text-sm text-text-secondary">{user.branch?.name ?? 'N/A'}</td>
                   <td className="px-4 py-3">
                     <span className="badge badge-neutral">
-                      <span className={`badge-dot ${user.status === 'Active' ? 'bg-accent-green' : 'bg-accent-red'}`} />
-                      {user.status}
+                      <span className={`badge-dot ${user.isActive ? 'bg-accent-green' : 'bg-accent-red'}`} />
+                      {user.isActive ? 'Active' : 'Disabled'}
                     </span>
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => handleEdit(user)}
-                        className="p-1.5 text-accent-blue hover:bg-accent-blue/10 rounded-lg transition"
-                        title="Edit"
-                        aria-label={`Edit ${user.firstName} ${user.lastName}`}
-                      >
+                      <button onClick={() => handleEdit(user)} className="p-1.5 text-accent-blue hover:bg-accent-blue/10 rounded-lg transition" title="Edit">
                         <Pencil size={15} />
                       </button>
-                      <button
-                        onClick={() => handleArchive(user)}
-                        className="p-1.5 text-accent-red hover:bg-accent-red/10 rounded-lg transition"
-                        title="Archive"
-                        aria-label={`Archive ${user.firstName} ${user.lastName}`}
-                      >
+                      <button onClick={() => handleArchive(user)} className="p-1.5 text-accent-red hover:bg-accent-red/10 rounded-lg transition" title="Archive">
                         <Trash2 size={15} />
                       </button>
                     </div>
@@ -463,73 +367,35 @@ export default function UsersPage() {
         </div>
 
         <div className="p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-sm text-text-secondary">
-          <span>
-            Showing {filteredUsers.length === 0 ? 0 : pageStart + 1} to {pageStart + displayedUsers.length} of {filteredUsers.length} entries
-          </span>
+          <span>Showing {users.length === 0 ? 0 : pageStart + 1} to {pageStart + displayedUsers.length} of {users.length} entries</span>
           {totalPages > 1 && (
             <div className="flex items-center gap-1">
-              <button
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className="px-2.5 py-1 rounded-lg border border-card-border disabled:opacity-50 hover:bg-white/5 transition-colors"
-              >
-                Previous
-              </button>
+              <button onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1} className="px-2.5 py-1 rounded-lg border border-card-border disabled:opacity-50 hover:bg-white/5 transition-colors">Previous</button>
               {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                <button
-                  key={p}
-                  onClick={() => setCurrentPage(p)}
-                  className={`px-2.5 py-1 rounded-lg transition-colors ${
-                    p === currentPage ? 'bg-btn-primary text-white' : 'border border-card-border hover:bg-white/5'
-                  }`}
-                >
-                  {p}
-                </button>
+                <button key={p} onClick={() => setCurrentPage(p)} className={`px-2.5 py-1 rounded-lg transition-colors ${p === currentPage ? 'bg-btn-primary text-white' : 'border border-card-border hover:bg-white/5'}`}>{p}</button>
               ))}
-              <button
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages}
-                className="px-2.5 py-1 rounded-lg border border-card-border disabled:opacity-50 hover:bg-white/5 transition-colors"
-              >
-                Next
-              </button>
+              <button onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="px-2.5 py-1 rounded-lg border border-card-border disabled:opacity-50 hover:bg-white/5 transition-colors">Next</button>
             </div>
           )}
         </div>
       </div>
 
-      {/* Add New User Modal */}
       {showAddModal && (
-        <Modal title="Add New User" onClose={() => setShowAddModal(false)}>
-          {renderUserForm(false)}
-        </Modal>
+        <Modal title="Add New User" onClose={() => setShowAddModal(false)}>{renderUserForm(false)}</Modal>
       )}
-
-      {/* Edit User Modal */}
       {showEditModal && (
-        <Modal title="Edit User" onClose={() => setShowEditModal(false)}>
-          {renderUserForm(true)}
-        </Modal>
+        <Modal title="Edit User" onClose={() => setShowEditModal(false)}>{renderUserForm(true)}</Modal>
       )}
-
-      {/* Archive Confirmation Modal */}
       {showArchiveModal && selectedUser && (
         <Modal title="Archive User" onClose={() => setShowArchiveModal(false)}>
           <p className="text-sm text-text-secondary mb-4">
             Are you sure you want to archive <strong>{selectedUser.firstName} {selectedUser.lastName}</strong>? This user will be moved to the archive.
           </p>
+          {formError && <div className="rounded-lg bg-accent-red/10 border border-accent-red/30 px-3 py-2 text-sm text-accent-red mb-3">{formError}</div>}
           <div className="flex gap-3 justify-end">
-            <button
-              onClick={() => setShowArchiveModal(false)}
-              className="px-4 py-2 border border-input-border rounded-lg text-sm text-text-primary hover:bg-white/5 transition"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={confirmArchive}
-              className="px-4 py-2 bg-accent-red text-white rounded-lg text-sm font-medium hover:opacity-90 transition"
-            >
-              Yes, Archive
+            <button onClick={() => setShowArchiveModal(false)} className="px-4 py-2 border border-input-border rounded-lg text-sm text-text-primary hover:bg-white/5 transition">Cancel</button>
+            <button onClick={confirmArchive} disabled={archiveUser.isPending} className="px-4 py-2 bg-accent-red text-white rounded-lg text-sm font-medium hover:opacity-90 transition disabled:opacity-60">
+              {archiveUser.isPending ? 'Archiving...' : 'Yes, Archive'}
             </button>
           </div>
         </Modal>

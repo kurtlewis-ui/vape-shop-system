@@ -79,3 +79,107 @@ export interface ApiEnvelope<T> {
     message: string;
   };
 }
+
+
+// ---------------------------------------------------------------------------
+// Catalog, sales, logs (backend feature modules)
+// ---------------------------------------------------------------------------
+
+export interface Brand {
+  id: string;
+  name: string;
+  slug: string;
+  coverImage: string | null;
+  isActive: boolean;
+  productCount: number;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+}
+
+export interface ProductBranchQuantity {
+  branchId: string;
+  branchName: string | null;
+  quantity: number;
+}
+
+export interface Product {
+  id: string;
+  name: string;
+  slug: string;
+  image: string | null;
+  brand: { id: string; name: string; slug: string } | null;
+  sellingPrice: number;
+  quantityAlert: number;
+  isActive: boolean;
+  quantities: ProductBranchQuantity[];
+  totalQuantity: number;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+}
+
+export type PaymentMethod = 'Cash' | 'Gcash';
+export type SaleStatus = 'PENDING' | 'APPROVED' | 'DECLINED';
+
+export interface SaleLineItem {
+  id: string;
+  productId: string | null;
+  name: string;
+  brandName: string;
+  quantity: number;
+  unitPrice: number;
+  subTotal: number;
+}
+
+export interface Sale {
+  id: string;
+  number: number;
+  customerName: string | null;
+  branch: { id: string; name: string } | null;
+  staff: { id: string; name: string; email: string } | null;
+  paymentMethod: PaymentMethod;
+  status: SaleStatus;
+  total: number;
+  items: SaleLineItem[];
+  createdAt: string;
+  decidedAt: string | null;
+}
+
+export interface SalesSummary {
+  cash: number;
+  gcash: number;
+  total: number;
+  count: number;
+}
+
+export interface ActivityLog {
+  id: string;
+  userName: string;
+  userEmail: string;
+  action: string;
+  module: string;
+  category: string;
+  description: string;
+  device: string;
+  ipAddress: string;
+  date: string;
+}
+
+export interface DashboardStats {
+  shops: number;
+  products: number;
+  brands: number;
+  pendingSales: number;
+  approvedSales: number;
+  staff: number;
+  admins: number;
+  approvedSalesTotal: number;
+}
+
+// User row including the optional fields added to the schema.
+export interface FullUser extends UserListItem {
+  middleInitial: string | null;
+  avatarUrl: string | null;
+  deletedAt?: string | null;
+}
