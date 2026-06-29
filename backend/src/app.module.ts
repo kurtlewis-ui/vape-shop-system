@@ -8,6 +8,11 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { BranchesModule } from './modules/branches/branches.module';
+import { BrandsModule } from './modules/brands/brands.module';
+import { ProductsModule } from './modules/products/products.module';
+import { SalesModule } from './modules/sales/sales.module';
+import { ActivityLogsModule } from './modules/activity-logs/activity-logs.module';
+import { StatsModule } from './modules/stats/stats.module';
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
 
 @Module({
@@ -33,6 +38,11 @@ import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
     AuthModule,
     UsersModule,
     BranchesModule,
+    BrandsModule,
+    ProductsModule,
+    SalesModule,
+    ActivityLogsModule,
+    StatsModule,
   ],
   controllers: [AppController],
   providers: [

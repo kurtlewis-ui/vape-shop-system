@@ -83,6 +83,57 @@ export class BranchesService {
     return branches.map((b) => this.serialize(b));
   }
 
+  /**
+   * List archived (soft-deleted) branches for the Archive page.
+   */
+  async findArchived() {
+    const branches = await this.prisma.branch.findMany({
+      where: { deletedAt: { not: null } },
+      include: { _count: { select: { users: true } } },
+      orderBy: { deletedAt: 'desc' },
+    });
+    return branches.map((b) => this.serialize(b));
+  }
+
+  /**
+   * Restore a soft-deleted branch.
+   */
+  async restore(id: string, restoredBy: string) {
+    const branch = await this.prisma.branch.findFirst({
+      where: { id, deletedAt: { not: null } },
+    });
+    if (!branch) {
+      throw new NotFoundException('Archived branch not found');
+    }
+
+    const conflict = await this.prisma.branch.findFirst({
+      where: { name: branch.name, deletedAt: null },
+    });
+    if (conflict) {
+      throw new ConflictException(
+        'An active branch with that name already exists. Rename it before restoring.',
+      );
+    }
+
+    const restored = await this.prisma.branch.update({
+      where: { id },
+      data: { deletedAt: null, isActive: true },
+      include: { _count: { select: { users: true } } },
+    });
+
+    await this.prisma.auditLog.create({
+      data: {
+        userId: restoredBy,
+        action: 'BRANCH_RESTORED',
+        entityType: 'Branch',
+        entityId: id,
+        newValues: { name: branch.name },
+      },
+    });
+
+    return this.serialize(restored);
+  }
+
   async findOne(id: string) {
     const branch = await this.prisma.branch.findFirst({
       where: { id, deletedAt: null },

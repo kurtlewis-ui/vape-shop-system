@@ -413,6 +413,87 @@ export class UsersService {
     return { message: 'User deleted successfully' };
   }
 
+  async findArchived(query: QueryUserDto) {
+    const { page = 1, limit = 20, search } = query;
+    const skip = (page - 1) * limit;
+
+    const where: any = { deletedAt: { not: null } };
+
+    if (search) {
+      where.OR = [
+        { firstName: { contains: search, mode: 'insensitive' } },
+        { lastName: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    const total = await this.prisma.user.count({ where });
+
+    const users = await this.prisma.user.findMany({
+      where,
+      include: {
+        role: { select: { id: true, name: true } },
+        branch: { select: { id: true, name: true } },
+      },
+      orderBy: { deletedAt: 'desc' },
+      skip,
+      take: limit,
+    });
+
+    const usersWithoutPasswords = users.map(({ passwordHash, ...user }) => user);
+
+    return {
+      data: usersWithoutPasswords,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit) || 1,
+        hasNext: page * limit < total,
+        hasPrev: page > 1,
+      },
+    };
+  }
+
+  async restore(id: string, restoredBy: string) {
+    const user = await this.prisma.user.findFirst({
+      where: { id, deletedAt: { not: null } },
+    });
+
+    if (!user) {
+      throw new NotFoundException('Archived user not found');
+    }
+
+    // Block restore if the email is now used by an active account.
+    const conflict = await this.prisma.user.findFirst({
+      where: { email: user.email, deletedAt: null, NOT: { id } },
+    });
+    if (conflict) {
+      throw new ConflictException(
+        'An active user already uses that email. Resolve the conflict before restoring.',
+      );
+    }
+
+    const restored = await this.prisma.user.update({
+      where: { id },
+      data: { deletedAt: null, isActive: true },
+      include: { role: true, branch: true },
+    });
+
+    await this.prisma.auditLog.create({
+      data: {
+        userId: restoredBy,
+        action: 'USER_RESTORED',
+        entityType: 'User',
+        entityId: id,
+        newValues: { email: user.email },
+      },
+    });
+
+    const { passwordHash, ...userWithoutPassword } = restored;
+    return userWithoutPassword;
+  }
+
   async getRoles() {
     return this.prisma.role.findMany({
       select: {

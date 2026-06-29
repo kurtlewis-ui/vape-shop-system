@@ -126,6 +126,56 @@ async function main() {
 
   console.log('✅ Default users created');
 
+  // ----------------------------------------------------------------------
+  // 4. SAMPLE CATALOG (brands + products + per-branch stock)
+  // ----------------------------------------------------------------------
+  console.log('Creating sample brands and products...');
+
+  const slugify = (s: string) =>
+    s.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
+
+  const brandData = [
+    { name: 'Elf Bar' },
+    { name: 'Lost Mary' },
+    { name: 'Funky Republic' },
+  ];
+
+  const brands: Record<string, string> = {};
+  for (const b of brandData) {
+    const existing = await prisma.brand.findFirst({ where: { name: b.name } });
+    const brand =
+      existing ??
+      (await prisma.brand.create({
+        data: { name: b.name, slug: slugify(b.name) },
+      }));
+    brands[b.name] = brand.id;
+  }
+
+  const productData = [
+    { name: 'Blue Razz Ice 5000', brand: 'Elf Bar', price: 450, qty: 30, alert: 5 },
+    { name: 'Watermelon Ice 5000', brand: 'Elf Bar', price: 450, qty: 25, alert: 5 },
+    { name: 'Mango Tango 3000', brand: 'Lost Mary', price: 380, qty: 40, alert: 8 },
+    { name: 'Grape Ice 5000', brand: 'Lost Mary', price: 400, qty: 18, alert: 5 },
+    { name: 'Strawberry Banana', brand: 'Funky Republic', price: 520, qty: 12, alert: 3 },
+  ];
+
+  for (const p of productData) {
+    const exists = await prisma.product.findFirst({ where: { name: p.name } });
+    if (exists) continue;
+    await prisma.product.create({
+      data: {
+        name: p.name,
+        slug: slugify(p.name),
+        brandId: brands[p.brand],
+        sellingPrice: p.price,
+        quantityAlert: p.alert,
+        inventory: { create: [{ branchId: mainBranch.id, quantity: p.qty }] },
+      },
+    });
+  }
+
+  console.log('✅ Sample brands and products created');
+
   console.log('🎉 Database seed completed successfully!');
   console.log('');
   console.log('Default login credentials:');
