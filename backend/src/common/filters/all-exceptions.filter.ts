@@ -43,6 +43,13 @@ export class AllExceptionsFilter implements ExceptionFilter {
         message = exceptionResponse as string;
         code = this.mapStatusToCode(status);
       }
+    } else if (this.isPayloadTooLarge(exception)) {
+      // Express body-parser throws a non-HttpException error when the request
+      // body exceeds the configured limit (e.g. a large uploaded image).
+      status = HttpStatus.PAYLOAD_TOO_LARGE;
+      code = 'PAYLOAD_TOO_LARGE';
+      message =
+        'The uploaded file is too large. Please choose a smaller image and try again.';
     }
 
     // Log server errors (5xx) with full detail
@@ -79,11 +86,23 @@ export class AllExceptionsFilter implements ExceptionFilter {
       403: 'FORBIDDEN',
       404: 'NOT_FOUND',
       409: 'CONFLICT',
+      413: 'PAYLOAD_TOO_LARGE',
       422: 'VALIDATION_ERROR',
       429: 'RATE_LIMIT_EXCEEDED',
       500: 'INTERNAL_ERROR',
       503: 'SERVICE_UNAVAILABLE',
     };
     return map[status] || 'ERROR';
+  }
+
+  /** Detects Express body-parser "request entity too large" errors. */
+  private isPayloadTooLarge(exception: unknown): boolean {
+    const e = exception as any;
+    return (
+      !!e &&
+      (e.type === 'entity.too.large' ||
+        e.status === 413 ||
+        e.statusCode === 413)
+    );
   }
 }
