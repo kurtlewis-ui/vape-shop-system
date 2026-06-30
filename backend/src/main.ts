@@ -3,6 +3,7 @@ import { ValidationPipe, Logger } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import helmet from 'helmet';
 import * as cookieParser from 'cookie-parser';
+import { json, urlencoded } from 'express';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { PrismaExceptionFilter } from './common/filters/prisma-exception.filter';
@@ -11,8 +12,17 @@ import { TransformInterceptor } from './common/interceptors/transform.intercepto
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  // Disable Nest's built-in body parser so we can register our own with a
+  // larger limit (uploaded images are stored inline as base64 data URLs).
+  const app = await NestFactory.create(AppModule, { bodyParser: false });
   const logger = new Logger('Bootstrap');
+
+  // Body parsers with a generous limit so base64 image data URLs fit.
+  // (Express defaults to 100kb, which is too small for inline images and
+  // surfaces as a confusing "An unexpected error occurred".)
+  const bodyLimit = process.env.BODY_LIMIT || '15mb';
+  app.use(json({ limit: bodyLimit }));
+  app.use(urlencoded({ extended: true, limit: bodyLimit }));
 
   // Security headers
   app.use(helmet());
