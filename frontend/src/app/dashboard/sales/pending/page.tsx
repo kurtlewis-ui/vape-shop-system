@@ -190,8 +190,8 @@ export default function SalesPendingPage() {
                       <td className="px-4 py-3">
                         {idx === 0 && (
                           <div className="flex items-center gap-1.5">
-                            <button onClick={() => runSafe(async () => { await approveSale.mutateAsync(sale.id); setActionStatus(`✓ Sale #${sale.number} approved.`); })} className="p-1.5 text-accent-green hover:bg-accent-green/10 rounded transition" title="Approve"><CheckCircle size={15} /></button>
-                            <button onClick={() => runSafe(async () => { await declineSale.mutateAsync(sale.id); setActionStatus(`Sale #${sale.number} declined.`); })} className="p-1.5 text-accent-orange hover:bg-accent-orange/10 rounded transition" title="Decline"><XCircle size={15} /></button>
+                            <button onClick={() => runSafe(async () => { await approveSale.mutateAsync(sale.id); setActionStatus(`✓ Sale #${sale.number} approved.`); })} className="p-1.5 bg-accent-green text-white rounded hover:opacity-90 transition" title="Approve"><CheckCircle size={15} /></button>
+                            <button onClick={() => runSafe(async () => { await declineSale.mutateAsync(sale.id); setActionStatus(`Sale #${sale.number} declined.`); })} className="p-1.5 bg-accent-orange text-white rounded hover:opacity-90 transition" title="Decline"><XCircle size={15} /></button>
                             <button onClick={() => { setActionError(null); setEditingSale(sale); }} className="p-1.5 text-accent-blue hover:bg-blue-500/10 rounded transition" title="Edit"><Pencil size={15} /></button>
                             <button onClick={() => { setActionError(null); setDeletingSale(sale); }} className="p-1.5 text-accent-red hover:bg-red-500/10 rounded transition" title="Delete"><Trash2 size={15} /></button>
                           </div>
@@ -231,14 +231,14 @@ export default function SalesPendingPage() {
             <button
               onClick={() => { const n = disposals.length; if (!n) return; runSafe(async () => { await Promise.all(disposals.map((d) => approveDisposal.mutateAsync(d.id))); setActionStatus(`✓ All ${n} disposal${n === 1 ? '' : 's'} approved (stock deducted).`); }); }}
               disabled={disposals.length === 0}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-accent-green/15 text-accent-green rounded-lg text-sm font-medium hover:bg-accent-green/25 transition disabled:opacity-50"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-accent-green text-white rounded-lg text-sm font-medium hover:opacity-90 transition disabled:opacity-50"
             >
               <CheckCircle size={15} /> Approve All
             </button>
             <button
               onClick={() => { const n = disposals.length; if (!n) return; runSafe(async () => { await Promise.all(disposals.map((d) => declineDisposal.mutateAsync(d.id))); setActionStatus(`All ${n} disposal${n === 1 ? '' : 's'} declined.`); }); }}
               disabled={disposals.length === 0}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-accent-red/15 text-accent-red rounded-lg text-sm font-medium hover:bg-accent-red/25 transition disabled:opacity-50"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-accent-red text-white rounded-lg text-sm font-medium hover:opacity-90 transition disabled:opacity-50"
             >
               <XCircle size={15} /> Decline All
             </button>
@@ -276,8 +276,8 @@ export default function SalesPendingPage() {
                   <td className="px-4 py-3 text-sm text-text-secondary">{formatDate(d.createdAt)}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1.5">
-                      <button onClick={() => runSafe(async () => { await approveDisposal.mutateAsync(d.id); setActionStatus(`✓ Disposal of ${d.quantity}× ${d.name} approved (stock deducted).`); })} className="p-1.5 text-accent-green hover:bg-accent-green/10 rounded transition" title="Approve"><CheckCircle size={15} /></button>
-                      <button onClick={() => runSafe(async () => { await declineDisposal.mutateAsync(d.id); setActionStatus(`Disposal of ${d.name} declined.`); })} className="p-1.5 text-accent-orange hover:bg-accent-orange/10 rounded transition" title="Decline"><XCircle size={15} /></button>
+                      <button onClick={() => runSafe(async () => { await approveDisposal.mutateAsync(d.id); setActionStatus(`✓ Disposal of ${d.quantity}× ${d.name} approved (stock deducted).`); })} className="p-1.5 bg-accent-green text-white rounded hover:opacity-90 transition" title="Approve"><CheckCircle size={15} /></button>
+                      <button onClick={() => runSafe(async () => { await declineDisposal.mutateAsync(d.id); setActionStatus(`Disposal of ${d.name} declined.`); })} className="p-1.5 bg-accent-orange text-white rounded hover:opacity-90 transition" title="Decline"><XCircle size={15} /></button>
                     </div>
                   </td>
                 </tr>

@@ -45,9 +45,19 @@ api.interceptors.response.use(
 // Pull a human-friendly message out of an axios error.
 export function getApiErrorMessage(error: unknown, fallback = 'Something went wrong.'): string {
   if (axios.isAxiosError(error)) {
+    const data: any = error.response?.data;
+    // Surface the specific validation detail(s) instead of a generic message.
+    const details = data?.error?.details;
+    if (Array.isArray(details) && details.length) {
+      const msg = details
+        .map((d: any) => d?.message)
+        .filter(Boolean)
+        .join('; ');
+      if (msg) return msg;
+    }
     return (
-      error.response?.data?.error?.message ||
-      error.response?.data?.message ||
+      data?.error?.message ||
+      data?.message ||
       error.message ||
       fallback
     );
