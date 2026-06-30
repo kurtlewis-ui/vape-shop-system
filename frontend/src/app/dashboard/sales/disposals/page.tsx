@@ -24,10 +24,14 @@ export default function DisposalsPage() {
 
   const { data, isLoading, isError, error } = useDisposals({
     search, branchId: selectedShop || undefined, startDate: startDate || undefined, endDate: endDate || undefined,
-    status: 'APPROVED',
   });
-  const disposals = data?.data ?? [];
-  const summary = data?.summary ?? { totalValue: 0, totalQuantity: 0, count: 0 };
+  // Show only approved disposals (the stock actually written off).
+  const disposals = (data?.data ?? []).filter((d) => d.status === 'APPROVED');
+  const summary = {
+    totalQuantity: disposals.reduce((s, d) => s + d.quantity, 0),
+    totalValue: disposals.reduce((s, d) => s + d.value, 0),
+    count: disposals.length,
+  };
 
   return (
     <div className="p-6 bg-page-bg min-h-screen">

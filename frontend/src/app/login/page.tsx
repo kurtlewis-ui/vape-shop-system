@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { api, getApiErrorMessage } from '@/lib/api';
+import { api, getApiErrorMessage, warmUpBackend } from '@/lib/api';
 import { useAuthStore } from '@/lib/store';
 import type { ApiEnvelope, AuthUser } from '@/lib/types';
 import { Eye, EyeOff, Lock, Mail } from 'lucide-react';
@@ -16,16 +16,25 @@ export default function LoginPage() {
   const router = useRouter();
   const setAuth = useAuthStore((state) => state.setAuth);
 
-  const [email, setEmail] = useState('owner@vapeshop.com');
-  const [password, setPassword] = useState('ChangeMe123!');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [slow, setSlow] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  // Start waking the (free-tier) backend as soon as the page loads, so it's
+  // ready by the time credentials are submitted.
+  useEffect(() => {
+    warmUpBackend();
+  }, []);
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     setError(null);
     setLoading(true);
+    // If it's taking a while, reassure the user the server is just waking up.
+    const slowTimer = setTimeout(() => setSlow(true), 4000);
 
     try {
       const response = await api.post<ApiEnvelope<LoginData>>('/auth/login', {
@@ -39,6 +48,8 @@ export default function LoginPage() {
     } catch (err) {
       setError(getApiErrorMessage(err, 'Login failed. Check your email and password.'));
     } finally {
+      clearTimeout(slowTimer);
+      setSlow(false);
       setLoading(false);
     }
   }
@@ -125,7 +136,7 @@ export default function LoginPage() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
-                  Logging in...
+                  {slow ? 'Waking the server…' : 'Logging in...'}
                 </span>
               ) : (
                 'LOG-IN'
