@@ -111,7 +111,7 @@ export default function SalesPendingPage() {
       <div className="flex items-center justify-between mb-6 flex-wrap gap-2">
         <h1 className="text-2xl font-bold text-text-primary">Pending Sales</h1>
         <div className="flex items-center gap-2">
-          <button onClick={handleApproveAll} disabled={busy || sales.length === 0} className="flex items-center gap-1.5 btn-grad px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-70">
+          <button onClick={handleApproveAll} disabled={busy || sales.length === 0} className="flex items-center gap-1.5 px-4 py-2 bg-accent-green text-white rounded-lg text-sm font-medium hover:opacity-90 transition disabled:opacity-70">
             <CheckCircle size={16} /> Approve All
           </button>
           <button onClick={handleDeclineAll} disabled={busy || sales.length === 0} className="flex items-center gap-1.5 px-4 py-2 bg-accent-red text-white rounded-lg text-sm font-medium hover:opacity-90 transition disabled:opacity-70">
