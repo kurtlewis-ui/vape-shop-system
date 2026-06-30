@@ -49,6 +49,23 @@ export class PrismaExceptionFilter implements ExceptionFilter {
         code = 'RELATION_ERROR';
         message = 'The change would violate a required relation';
         break;
+      case 'P2021':
+      case 'P2022':
+        // Table (P2021) or column (P2022) does not exist => schema is behind code.
+        status = HttpStatus.INTERNAL_SERVER_ERROR;
+        code = 'SCHEMA_OUT_OF_DATE';
+        message =
+          'The database schema is out of date. Run pending migrations ' +
+          '(`npx prisma migrate deploy` from the backend folder) and restart the server.';
+        this.logger.error(
+          `Schema out of date (${exception.code}): ${exception.message}`,
+        );
+        break;
+      case 'P2024':
+        status = HttpStatus.SERVICE_UNAVAILABLE;
+        code = 'DB_TIMEOUT';
+        message = 'The database is not responding. Please try again shortly.';
+        break;
       default:
         this.logger.error(
           `Unhandled Prisma error ${exception.code}: ${exception.message}`,

@@ -6,8 +6,19 @@ import { useAuthStore } from './store';
  * - baseURL comes from NEXT_PUBLIC_API_URL (falls back to localhost:4000).
  * - withCredentials lets the browser send/receive the refresh-token cookie.
  */
+/**
+ * Resolve the API base URL. Accepts either a full base that already includes
+ * the `/api/v1` prefix, or just the server origin (e.g. http://localhost:4000)
+ * in which case we append the prefix. This keeps it working regardless of how
+ * NEXT_PUBLIC_API_URL is set.
+ */
+function resolveBaseUrl(): string {
+  const raw = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000').replace(/\/+$/, '');
+  return /\/api\/v\d+$/.test(raw) ? raw : `${raw}/api/v1`;
+}
+
 export const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1',
+  baseURL: resolveBaseUrl(),
   withCredentials: true,
 });
 

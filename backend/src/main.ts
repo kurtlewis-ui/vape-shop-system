@@ -6,6 +6,7 @@ import * as cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { PrismaExceptionFilter } from './common/filters/prisma-exception.filter';
+import { PrismaInitExceptionFilter } from './common/filters/prisma-init-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 
@@ -25,8 +26,10 @@ async function bootstrap() {
     credentials: true,
   });
 
-  // Global prefix
-  app.setGlobalPrefix(process.env.API_PREFIX || 'api/v1');
+  // Global prefix (health/version stay at the root for easy probing)
+  app.setGlobalPrefix(process.env.API_PREFIX || 'api/v1', {
+    exclude: ['health', 'version'],
+  });
 
   // Global validation pipe
   app.useGlobalPipes(
@@ -41,7 +44,11 @@ async function bootstrap() {
   );
 
   // Global exception filters (order matters: specific first, then catch-all)
-  app.useGlobalFilters(new AllExceptionsFilter(), new PrismaExceptionFilter());
+  app.useGlobalFilters(
+    new AllExceptionsFilter(),
+    new PrismaExceptionFilter(),
+    new PrismaInitExceptionFilter(),
+  );
 
   // Global interceptors
   app.useGlobalInterceptors(new LoggingInterceptor(), new TransformInterceptor());
