@@ -12,6 +12,7 @@ import {
   useArchiveUser,
 } from '@/lib/hooks';
 import { getApiErrorMessage } from '@/lib/api';
+import { fileToResizedDataUrl } from '@/lib/image';
 import type { FullUser } from '@/lib/types';
 
 function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
@@ -39,6 +40,7 @@ interface FormData {
   isActive: boolean;
   password: string;
   confirmPassword: string;
+  avatarUrl: string;
 }
 
 export default function UsersPage() {
@@ -67,7 +69,7 @@ export default function UsersPage() {
 
   const [formData, setFormData] = useState<FormData>({
     firstName: '', middleInitial: '', lastName: '', email: '',
-    roleId: '', branchId: '', isActive: true, password: '', confirmPassword: '',
+    roleId: '', branchId: '', isActive: true, password: '', confirmPassword: '', avatarUrl: '',
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -83,7 +85,7 @@ export default function UsersPage() {
     setFormData({
       firstName: '', middleInitial: '', lastName: '', email: '',
       roleId: roles.find((r) => r.name === 'Staff')?.id ?? roles[0]?.id ?? '',
-      branchId: branches[0]?.id ?? '', isActive: true, password: '', confirmPassword: '',
+      branchId: branches[0]?.id ?? '', isActive: true, password: '', confirmPassword: '', avatarUrl: '',
     });
     setShowPassword(false);
     setShowConfirmPassword(false);
@@ -105,6 +107,7 @@ export default function UsersPage() {
       isActive: user.isActive,
       password: '',
       confirmPassword: '',
+      avatarUrl: user.avatarUrl ?? '',
     });
     setShowEditModal(true);
   };
@@ -147,6 +150,7 @@ export default function UsersPage() {
         middleInitial: formData.middleInitial.trim() || undefined,
         roleId: formData.roleId,
         branchId: isStaffRole ? formData.branchId : undefined,
+        avatarUrl: formData.avatarUrl || undefined,
       });
       setShowAddModal(false);
     } catch (e) { setFormError(getApiErrorMessage(e)); }
@@ -164,6 +168,7 @@ export default function UsersPage() {
         roleId: formData.roleId,
         branchId: isStaffRole ? formData.branchId : null,
         isActive: formData.isActive,
+        avatarUrl: formData.avatarUrl,
       });
       if (formData.password) {
         await resetPassword.mutateAsync({
@@ -199,6 +204,40 @@ export default function UsersPage() {
 
   const renderUserForm = (isEdit: boolean) => (
     <div className="space-y-4">
+      <div className="flex items-center gap-4">
+        {formData.avatarUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={formData.avatarUrl} alt="" className="w-16 h-16 rounded-full object-cover border border-card-border" />
+        ) : (
+          <div className="w-16 h-16 rounded-full bg-accent-primary flex items-center justify-center text-white text-lg font-bold">
+            {(formData.firstName[0] ?? '').toUpperCase()}{(formData.lastName[0] ?? '').toUpperCase()}
+          </div>
+        )}
+        <div className="text-sm">
+          <label className="inline-block cursor-pointer bg-btn-primary text-white px-3 py-1.5 rounded-lg hover:opacity-90">
+            Upload Photo
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                try {
+                  const dataUrl = await fileToResizedDataUrl(file, 256, 0.85);
+                  setFormData((f) => ({ ...f, avatarUrl: dataUrl }));
+                } catch (err) {
+                  setFormError(err instanceof Error ? err.message : 'Could not process image.');
+                }
+              }}
+            />
+          </label>
+          {formData.avatarUrl && (
+            <button type="button" onClick={() => setFormData((f) => ({ ...f, avatarUrl: '' }))} className="ml-2 text-accent-red hover:underline text-xs">Remove</button>
+          )}
+        </div>
+      </div>
+
       <div className="grid grid-cols-3 gap-2">
         <div>
           <label className="block text-sm font-medium text-text-primary mb-1">First Name</label>
@@ -261,7 +300,7 @@ export default function UsersPage() {
             <RefreshCw size={14} /> Generate
           </button>
         </div>
-        <p className="text-xs text-text-muted mt-1">Min 8 chars with uppercase, lowercase, number and a special character.</p>
+        <p className="text-xs text-text-muted mt-1">Minimum 4 characters.</p>
       </div>
 
       <div>
@@ -334,9 +373,14 @@ export default function UsersPage() {
                 <tr key={user.id} className="border-b border-card-border hover:bg-white/5 transition">
                   <td className="px-4 py-3 text-sm text-text-primary">{pageStart + idx + 1}</td>
                   <td className="px-4 py-3">
-                    <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-xs text-text-muted">
-                      {user.firstName[0]}{user.lastName[0]}
-                    </div>
+                    {user.avatarUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={user.avatarUrl} alt="" className="w-8 h-8 rounded-full object-cover" />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-xs text-text-muted">
+                        {user.firstName[0]}{user.lastName[0]}
+                      </div>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-sm text-text-primary font-medium">
                     {user.firstName} {user.middleInitial ? `${user.middleInitial}. ` : ''}{user.lastName}

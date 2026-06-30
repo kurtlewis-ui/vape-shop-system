@@ -5,40 +5,24 @@ const prisma = new PrismaClient();
 
 const BCRYPT_ROUNDS = 12;
 
-// The only bootstrap data a real deployment needs: the three roles and a single
-// Owner account to log in with. Everything else (shops, brands, products,
+// The only bootstrap data a real deployment needs: the two roles and a single
+// Admin account to log in with. Everything else (shops, brands, products,
 // users, sales) is created through the app. No demo/sample data.
-const OWNER_EMAIL = process.env.SEED_OWNER_EMAIL || 'owner@vapeshop.com';
-const OWNER_PASSWORD = process.env.SEED_OWNER_PASSWORD || 'ChangeMe123!';
+const ADMIN_EMAIL = process.env.SEED_ADMIN_EMAIL || 'admin@vapeshop.com';
+const ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD || 'ChangeMe123!';
 
 async function main() {
   console.log('🌱 Starting database seed (clean bootstrap)...');
 
   // 1. Roles -----------------------------------------------------------------
-  const ownerRole = await prisma.role.upsert({
-    where: { name: 'Owner' },
-    update: {},
-    create: {
-      name: 'Owner',
-      description: 'Full system access',
-      permissions: {
-        users: ['create', 'read', 'update', 'delete'],
-        branches: ['create', 'read', 'update', 'delete'],
-        catalog: ['create', 'read', 'update', 'delete'],
-        sales: ['create', 'read', 'approve'],
-        reports: ['read'],
-      },
-    },
-  });
-
-  await prisma.role.upsert({
+  const adminRole = await prisma.role.upsert({
     where: { name: 'Admin' },
     update: {},
     create: {
       name: 'Admin',
-      description: 'Administrative access (cannot delete Owners)',
+      description: 'Full administrative access',
       permissions: {
-        users: ['create', 'read', 'update'],
+        users: ['create', 'read', 'update', 'delete'],
         branches: ['create', 'read', 'update', 'delete'],
         catalog: ['create', 'read', 'update', 'delete'],
         sales: ['create', 'read', 'approve'],
@@ -59,27 +43,27 @@ async function main() {
 
   console.log('✅ Roles ready');
 
-  // 2. Owner account ---------------------------------------------------------
-  const passwordHash = await bcrypt.hash(OWNER_PASSWORD, BCRYPT_ROUNDS);
+  // 2. Admin account ---------------------------------------------------------
+  const passwordHash = await bcrypt.hash(ADMIN_PASSWORD, BCRYPT_ROUNDS);
 
   await prisma.user.upsert({
-    where: { email: OWNER_EMAIL },
+    where: { email: ADMIN_EMAIL },
     update: {},
     create: {
-      email: OWNER_EMAIL,
+      email: ADMIN_EMAIL,
       passwordHash,
       firstName: 'System',
-      lastName: 'Owner',
-      roleId: ownerRole.id,
+      lastName: 'Admin',
+      roleId: adminRole.id,
       mustChangePassword: true,
     },
   });
 
-  console.log('✅ Owner account ready');
+  console.log('✅ Admin account ready');
   console.log('🎉 Seed complete. Log in and build out your shops, brands, products and users.');
   console.log('');
-  console.log(`   Owner login: ${OWNER_EMAIL} / ${OWNER_PASSWORD}`);
-  console.log('   ⚠️  Change this password immediately after first login.');
+  console.log(`   Admin login: ${ADMIN_EMAIL} / ${ADMIN_PASSWORD}`);
+  console.log('   ⚠️  Change this password after first login (Settings).');
 }
 
 main()

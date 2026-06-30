@@ -5,7 +5,6 @@ import {
   IsString,
   IsUUID,
   MinLength,
-  Matches,
   IsOptional,
 } from 'class-validator';
 
@@ -15,13 +14,10 @@ export class CreateUserDto {
   @IsNotEmpty()
   email: string;
 
-  @ApiProperty({ example: 'SecurePass123!' })
+  @ApiProperty({ example: 'password' })
   @IsString()
   @IsNotEmpty()
-  @MinLength(8, { message: 'Password must be at least 8 characters long' })
-  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/, {
-    message: 'Password must contain uppercase, lowercase, number and special character',
-  })
+  @MinLength(4, { message: 'Password must be at least 4 characters long' })
   password: string;
 
   @ApiProperty({ example: 'John' })
@@ -59,4 +55,12 @@ export class CreateUserDto {
   @IsUUID()
   @IsOptional()
   branchId?: string;
+
+  @ApiProperty({
+    required: false,
+    description: 'Profile photo as a data URL or image URL',
+  })
+  @IsString()
+  @IsOptional()
+  avatarUrl?: string;
 }

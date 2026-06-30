@@ -1,7 +1,7 @@
 'use client';
 
 import { Fragment, useEffect, useState } from 'react';
-import { Search, Pencil, Trash2, X, CheckCircle, XCircle, Plus, Loader2 } from 'lucide-react';
+import { Search, Pencil, Trash2, X, CheckCircle, XCircle, Plus, Loader2, Recycle } from 'lucide-react';
 import {
   useSalesPending,
   useBranches,
@@ -10,6 +10,9 @@ import {
   useDeclineSale,
   useDeleteSale,
   useUpdateSale,
+  useDisposalsPending,
+  useApproveDisposal,
+  useDeclineDisposal,
 } from '@/lib/hooks';
 import { getApiErrorMessage } from '@/lib/api';
 import type { Sale } from '@/lib/types';
@@ -64,17 +67,42 @@ export default function SalesPendingPage() {
   const deleteSale = useDeleteSale();
   const updateSale = useUpdateSale();
 
+  // Pending disposals (admin approves/declines these too)
+  const { data: disposalData, isLoading: dispLoading } = useDisposalsPending({
+    search,
+    branchId: selectedShop || undefined,
+  });
+  const disposals = disposalData?.data ?? [];
+  const approveDisposal = useApproveDisposal();
+  const declineDisposal = useDeclineDisposal();
+
   const [actionError, setActionError] = useState<string | null>(null);
+  const [actionStatus, setActionStatus] = useState<string | null>(null);
   const [editingSale, setEditingSale] = useState<Sale | null>(null);
   const [deletingSale, setDeletingSale] = useState<Sale | null>(null);
 
   async function runSafe(fn: () => Promise<unknown>) {
     setActionError(null);
+    setActionStatus(null);
     try { await fn(); } catch (e) { setActionError(getApiErrorMessage(e)); }
   }
 
-  const handleApproveAll = () => runSafe(() => Promise.all(sales.map((s) => approveSale.mutateAsync(s.id))));
-  const handleDeclineAll = () => runSafe(() => Promise.all(sales.map((s) => declineSale.mutateAsync(s.id))));
+  const handleApproveAll = () => {
+    const n = sales.length;
+    if (n === 0) return;
+    runSafe(async () => {
+      await Promise.all(sales.map((s) => approveSale.mutateAsync(s.id)));
+      setActionStatus(`✓ All ${n} pending sale${n === 1 ? '' : 's'} have been approved.`);
+    });
+  };
+  const handleDeclineAll = () => {
+    const n = sales.length;
+    if (n === 0) return;
+    runSafe(async () => {
+      await Promise.all(sales.map((s) => declineSale.mutateAsync(s.id)));
+      setActionStatus(`✓ All ${n} pending sale${n === 1 ? '' : 's'} have been declined.`);
+    });
+  };
 
   const busy = approveSale.isPending || declineSale.isPending || deleteSale.isPending;
 
@@ -94,6 +122,9 @@ export default function SalesPendingPage() {
 
       {actionError && (
         <div className="mb-4 rounded-lg bg-accent-red/10 border border-accent-red/30 px-4 py-2 text-sm text-accent-red">{actionError}</div>
+      )}
+      {actionStatus && (
+        <div className="mb-4 rounded-lg bg-accent-green/10 border border-accent-green/30 px-4 py-2 text-sm text-accent-green font-medium">{actionStatus}</div>
       )}
 
       {/* Filters */}
@@ -159,8 +190,8 @@ export default function SalesPendingPage() {
                       <td className="px-4 py-3">
                         {idx === 0 && (
                           <div className="flex items-center gap-1.5">
-                            <button onClick={() => runSafe(() => approveSale.mutateAsync(sale.id))} className="p-1.5 text-accent-green hover:bg-accent-green/10 rounded transition" title="Approve"><CheckCircle size={15} /></button>
-                            <button onClick={() => runSafe(() => declineSale.mutateAsync(sale.id))} className="p-1.5 text-accent-orange hover:bg-accent-orange/10 rounded transition" title="Decline"><XCircle size={15} /></button>
+                            <button onClick={() => runSafe(async () => { await approveSale.mutateAsync(sale.id); setActionStatus(`✓ Sale #${sale.number} approved.`); })} className="p-1.5 text-accent-green hover:bg-accent-green/10 rounded transition" title="Approve"><CheckCircle size={15} /></button>
+                            <button onClick={() => runSafe(async () => { await declineSale.mutateAsync(sale.id); setActionStatus(`Sale #${sale.number} declined.`); })} className="p-1.5 text-accent-orange hover:bg-accent-orange/10 rounded transition" title="Decline"><XCircle size={15} /></button>
                             <button onClick={() => { setActionError(null); setEditingSale(sale); }} className="p-1.5 text-accent-blue hover:bg-blue-500/10 rounded transition" title="Edit"><Pencil size={15} /></button>
                             <button onClick={() => { setActionError(null); setDeletingSale(sale); }} className="p-1.5 text-accent-red hover:bg-red-500/10 rounded transition" title="Delete"><Trash2 size={15} /></button>
                           </div>
@@ -186,6 +217,73 @@ export default function SalesPendingPage() {
             <p className="text-sm text-text-primary"><span className="font-medium">Total for Gcash:</span> {peso(summary.gcash)}</p>
             <p className="text-sm text-text-primary font-bold">Total for All Pending: {peso(summary.total)}</p>
           </div>
+        </div>
+      </div>
+
+      {/* Pending Disposals */}
+      <div className="bg-card-bg rounded-xl border border-card-border shadow-sm mt-6">
+        <div className="p-4 border-b border-card-border flex items-center justify-between flex-wrap gap-2">
+          <h2 className="text-lg font-bold text-text-primary flex items-center gap-2">
+            <Recycle size={18} /> Pending Disposals
+            {disposals.length > 0 && <span className="badge badge-neutral">{disposals.length}</span>}
+          </h2>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => { const n = disposals.length; if (!n) return; runSafe(async () => { await Promise.all(disposals.map((d) => approveDisposal.mutateAsync(d.id))); setActionStatus(`✓ All ${n} disposal${n === 1 ? '' : 's'} approved (stock deducted).`); }); }}
+              disabled={disposals.length === 0}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-accent-green/15 text-accent-green rounded-lg text-sm font-medium hover:bg-accent-green/25 transition disabled:opacity-50"
+            >
+              <CheckCircle size={15} /> Approve All
+            </button>
+            <button
+              onClick={() => { const n = disposals.length; if (!n) return; runSafe(async () => { await Promise.all(disposals.map((d) => declineDisposal.mutateAsync(d.id))); setActionStatus(`All ${n} disposal${n === 1 ? '' : 's'} declined.`); }); }}
+              disabled={disposals.length === 0}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-accent-red/15 text-accent-red rounded-lg text-sm font-medium hover:bg-accent-red/25 transition disabled:opacity-50"
+            >
+              <XCircle size={15} /> Decline All
+            </button>
+          </div>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="bg-table-header text-table-header-text">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase">Product</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase">Brand</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase">Shop</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase">Qty</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase">Value</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase">Reason</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase">Requested By</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase">Date</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {dispLoading ? (
+                <tr><td colSpan={9} className="text-center py-6 text-text-muted"><Loader2 className="inline animate-spin mr-2" size={16} />Loading…</td></tr>
+              ) : disposals.length === 0 ? (
+                <tr><td colSpan={9} className="text-center py-6 text-text-muted">No pending disposals.</td></tr>
+              ) : disposals.map((d) => (
+                <tr key={d.id} className="border-b border-card-border hover:bg-white/5 transition">
+                  <td className="px-4 py-3 text-sm text-text-primary">{d.name}</td>
+                  <td className="px-4 py-3 text-sm text-text-secondary">{d.brandName}</td>
+                  <td className="px-4 py-3 text-sm text-text-secondary">{d.branch?.name ?? '—'}</td>
+                  <td className="px-4 py-3 text-sm text-text-primary">{d.quantity}</td>
+                  <td className="px-4 py-3 text-sm text-text-primary font-medium">{peso(d.value)}</td>
+                  <td className="px-4 py-3 text-sm text-text-secondary max-w-[180px] truncate">{d.reason ?? '—'}</td>
+                  <td className="px-4 py-3 text-sm text-text-secondary">{d.createdBy}</td>
+                  <td className="px-4 py-3 text-sm text-text-secondary">{formatDate(d.createdAt)}</td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-1.5">
+                      <button onClick={() => runSafe(async () => { await approveDisposal.mutateAsync(d.id); setActionStatus(`✓ Disposal of ${d.quantity}× ${d.name} approved (stock deducted).`); })} className="p-1.5 text-accent-green hover:bg-accent-green/10 rounded transition" title="Approve"><CheckCircle size={15} /></button>
+                      <button onClick={() => runSafe(async () => { await declineDisposal.mutateAsync(d.id); setActionStatus(`Disposal of ${d.name} declined.`); })} className="p-1.5 text-accent-orange hover:bg-accent-orange/10 rounded transition" title="Decline"><XCircle size={15} /></button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
 

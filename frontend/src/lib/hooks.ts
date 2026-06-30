@@ -9,6 +9,7 @@ import {
 import { api } from './api';
 import type {
   ActivityLog,
+  AuthUser,
   Branch,
   Brand,
   DashboardStats,
@@ -290,6 +291,7 @@ export interface UserCreateInput {
   middleInitial?: string;
   roleId: string;
   branchId?: string;
+  avatarUrl?: string;
 }
 
 export function useCreateUser() {
@@ -310,6 +312,7 @@ export interface UserUpdateInput {
   roleId?: string;
   branchId?: string | null;
   isActive?: boolean;
+  avatarUrl?: string;
 }
 
 export function useUpdateUser() {
@@ -497,5 +500,74 @@ export function useCreateDisposal() {
     mutationFn: (body: { branchId?: string; productId: string; quantity: number; reason?: string }) =>
       api.post('/disposals', body).then((r) => r.data.data),
     onSuccess: () => invalidate(['disposals'], ['products'], ['stats']),
+  });
+}
+
+export function useDisposalsPending(params?: { search?: string; branchId?: string }) {
+  return useQuery({
+    queryKey: ['disposals', 'pending', params ?? {}],
+    queryFn: async () => {
+      const res = await api.get('/disposals/pending', {
+        params: {
+          limit: 200,
+          search: params?.search || undefined,
+          branchId: params?.branchId || undefined,
+        },
+      });
+      return {
+        data: (res.data.data ?? []) as Disposal[],
+        summary: (res.data.summary ?? { totalValue: 0, totalQuantity: 0, count: 0 }) as DisposalSummary,
+      };
+    },
+  });
+}
+
+export function useApproveDisposal() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: (id: string) => api.post(`/disposals/${id}/approve`).then((r) => r.data.data),
+    onSuccess: () => invalidate(['disposals'], ['products'], ['stats']),
+  });
+}
+
+export function useDeclineDisposal() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: (id: string) => api.post(`/disposals/${id}/decline`).then((r) => r.data.data),
+    onSuccess: () => invalidate(['disposals']),
+  });
+}
+
+// ===========================================================================
+// PROFILE (self)
+// ===========================================================================
+export function useMe() {
+  return useQuery({
+    queryKey: ['me'],
+    queryFn: () => getData<AuthUser>('/auth/me'),
+  });
+}
+
+export function useUpdateProfile() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: {
+      firstName?: string;
+      lastName?: string;
+      middleInitial?: string;
+      email?: string;
+      avatarUrl?: string;
+    }) => api.patch('/auth/profile', body).then((r) => r.data.data as AuthUser),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['me'] });
+      qc.invalidateQueries({ queryKey: ['users'] });
+    },
+  });
+}
+
+export function useChangeOwnPassword() {
+  return useMutation({
+    mutationFn: (body: { currentPassword: string; newPassword: string; confirmPassword: string }) =>
+      api.post('/auth/change-password', body).then((r) => r.data.data),
   });
 }

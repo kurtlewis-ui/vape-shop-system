@@ -10,6 +10,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { LoginDto } from './dto/login.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 import { JwtPayload, JwtRefreshPayload } from '../../common/interfaces/request-user.interface';
 
 @Injectable()
@@ -100,6 +101,7 @@ export class AuthService {
         branch: user.branch
           ? { id: user.branch.id, name: user.branch.name }
           : null,
+        avatarUrl: user.avatarUrl ?? null,
         mustChangePassword: user.mustChangePassword,
       },
     };
@@ -166,7 +168,63 @@ export class AuthService {
         branch: user.branch
           ? { id: user.branch.id, name: user.branch.name }
           : null,
+        avatarUrl: user.avatarUrl ?? null,
       },
+    };
+  }
+
+  /** Return the current user's full profile. */
+  async getProfile(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { role: true, branch: true },
+    });
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+    return this.serializeUser(user);
+  }
+
+  /** Update the current user's own profile (name, email, photo). */
+  async updateProfile(userId: string, dto: UpdateProfileDto) {
+    if (dto.email) {
+      const existing = await this.prisma.user.findFirst({
+        where: { email: dto.email, NOT: { id: userId } },
+      });
+      if (existing) {
+        throw new BadRequestException('That email is already in use');
+      }
+    }
+
+    const data: any = {};
+    if (dto.firstName !== undefined) data.firstName = dto.firstName.trim();
+    if (dto.lastName !== undefined) data.lastName = dto.lastName.trim();
+    if (dto.middleInitial !== undefined) data.middleInitial = dto.middleInitial.trim() || null;
+    if (dto.email !== undefined) data.email = dto.email;
+    if (dto.avatarUrl !== undefined) data.avatarUrl = dto.avatarUrl || null;
+
+    const user = await this.prisma.user.update({
+      where: { id: userId },
+      data,
+      include: { role: true, branch: true },
+    });
+
+    await this.createAuditLog(userId, 'PROFILE_UPDATED', null, null);
+
+    return this.serializeUser(user);
+  }
+
+  private serializeUser(user: any) {
+    return {
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      middleInitial: user.middleInitial ?? null,
+      avatarUrl: user.avatarUrl ?? null,
+      role: { id: user.role.id, name: user.role.name },
+      branch: user.branch ? { id: user.branch.id, name: user.branch.name } : null,
+      mustChangePassword: user.mustChangePassword,
     };
   }
 

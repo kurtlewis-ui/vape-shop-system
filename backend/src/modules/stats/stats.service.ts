@@ -25,7 +25,7 @@ export class StatsService {
         where: { deletedAt: null, role: { name: 'Staff' } },
       }),
       this.prisma.user.count({
-        where: { deletedAt: null, role: { name: { in: ['Admin', 'Owner'] } } },
+        where: { deletedAt: null, role: { name: 'Admin' } },
       }),
       this.prisma.sale.aggregate({
         where: { status: SaleStatus.APPROVED },

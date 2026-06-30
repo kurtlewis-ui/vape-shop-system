@@ -77,7 +77,7 @@ export class SalesController {
   }
 
   @Post(':id/approve')
-  @Roles('Owner', 'Admin')
+  @Roles('Admin')
   @ApiOperation({ summary: 'Approve a pending sale (deducts stock)' })
   async approve(
     @Param('id', ParseUUIDPipe) id: string,
@@ -88,7 +88,7 @@ export class SalesController {
   }
 
   @Post(':id/decline')
-  @Roles('Owner', 'Admin')
+  @Roles('Admin')
   @ApiOperation({ summary: 'Decline a pending sale' })
   async decline(
     @Param('id', ParseUUIDPipe) id: string,
