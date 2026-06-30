@@ -110,7 +110,7 @@ cp .env.example .env.local
 
 Edit `frontend/.env.local`:
 ```env
-NEXT_PUBLIC_API_URL=http://localhost:4000
+NEXT_PUBLIC_API_URL=http://localhost:4000/api/v1
 ```
 
 ### Step 4: Setup Database
@@ -185,15 +185,16 @@ npm run dev
 
 ---
 
-## Default Users
+## Default User
+
+The database seeds a single **Owner** account to bootstrap login. Create
+shops, staff and admins from inside the app afterwards.
 
 | Role | Email | Password | Access Level |
 |------|-------|----------|--------------|
 | **Owner** | owner@vapeshop.com | ChangeMe123! | Full system access |
-| **Admin** | admin@vapeshop.com | ChangeMe123! | Administrative access |
-| **Staff** | staff@vapeshop.com | ChangeMe123! | Basic operations |
 
-⚠️ **IMPORTANT:** Change these passwords immediately!
+⚠️ **IMPORTANT:** Change this password immediately after first login.
 
 ---
 
@@ -247,6 +248,28 @@ lsof -ti:3000 | xargs kill -9
 netstat -ano | findstr :3000
 taskkill /PID <PID> /F
 ```
+
+### Issue: Every page shows "database error" (code SCHEMA_OUT_OF_DATE)
+
+This means the API connected to the database but the tables/columns it needs
+don't exist yet — the migrations haven't been applied. Confirm with:
+
+```bash
+curl http://localhost:4000/health
+# look for  "schema": "migrations_pending"
+```
+
+Fix it by applying migrations (and seeding the Owner account), then restart:
+
+```bash
+cd backend
+npx prisma migrate deploy   # or: npx prisma migrate dev  (for local dev)
+npx prisma generate
+npm run prisma:seed
+```
+
+If `curl http://localhost:4000/health` instead shows `"database": "unreachable"`,
+PostgreSQL isn't running or `DATABASE_URL` in `backend/.env` is wrong.
 
 ### Issue: "Cannot connect to PostgreSQL"
 

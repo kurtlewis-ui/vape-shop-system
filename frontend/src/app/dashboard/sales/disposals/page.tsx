@@ -33,7 +33,7 @@ export default function DisposalsPage() {
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-text-primary">Disposals</h1>
         <button onClick={() => setShowModal(true)} className="flex items-center gap-2 btn-grad px-4 py-2 rounded-lg text-sm font-medium">
-          <Plus size={16} /> Record Disposal
+          <Plus size={16} /> Request Disposal
         </button>
       </div>
 
@@ -66,17 +66,18 @@ export default function DisposalsPage() {
                 <th className="px-4 py-3 text-left text-xs font-semibold uppercase">Qty</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold uppercase">Value</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold uppercase">Reason</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase">Status</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold uppercase">By</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold uppercase">Date</th>
               </tr>
             </thead>
             <tbody>
               {isLoading ? (
-                <tr><td colSpan={9} className="text-center py-8 text-text-muted"><Loader2 className="inline animate-spin mr-2" size={16} />Loading...</td></tr>
+                <tr><td colSpan={10} className="text-center py-8 text-text-muted"><Loader2 className="inline animate-spin mr-2" size={16} />Loading...</td></tr>
               ) : isError ? (
-                <tr><td colSpan={9} className="text-center py-8 text-accent-red">{getApiErrorMessage(error)}</td></tr>
+                <tr><td colSpan={10} className="text-center py-8 text-accent-red">{getApiErrorMessage(error)}</td></tr>
               ) : disposals.length === 0 ? (
-                <tr><td colSpan={9} className="px-4 py-12 text-center text-text-muted">No disposals recorded.</td></tr>
+                <tr><td colSpan={10} className="px-4 py-12 text-center text-text-muted">No disposals yet.</td></tr>
               ) : disposals.map((d, idx) => (
                 <tr key={d.id} className="border-b border-card-border hover:bg-white/5 transition">
                   <td className="px-4 py-3 text-sm text-text-primary">{idx + 1}</td>
@@ -86,6 +87,12 @@ export default function DisposalsPage() {
                   <td className="px-4 py-3 text-sm text-text-primary">{d.quantity}</td>
                   <td className="px-4 py-3 text-sm text-text-primary font-medium">{peso(d.value)}</td>
                   <td className="px-4 py-3 text-sm text-text-secondary max-w-[200px] truncate">{d.reason ?? '—'}</td>
+                  <td className="px-4 py-3">
+                    <span className="badge badge-neutral">
+                      <span className={`badge-dot ${d.status === 'APPROVED' ? 'bg-accent-green' : d.status === 'DECLINED' ? 'bg-accent-red' : 'bg-accent-orange'}`} />
+                      {d.status.charAt(0) + d.status.slice(1).toLowerCase()}
+                    </span>
+                  </td>
                   <td className="px-4 py-3 text-sm text-text-secondary">{d.createdBy}</td>
                   <td className="px-4 py-3 text-sm text-text-secondary">{formatDate(d.createdAt)}</td>
                 </tr>
@@ -137,11 +144,11 @@ function RecordDisposalModal({ branches, onClose }: { branches: { id: string; na
       <div className="absolute inset-0 bg-black/60" onClick={onClose} />
       <div className="relative bg-card-bg border border-card-border rounded-lg shadow-xl w-full max-w-md mx-4 p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold text-text-primary">Record Disposal</h3>
+          <h3 className="text-lg font-bold text-text-primary">Request Disposal</h3>
           <button onClick={onClose} className="text-text-muted hover:text-text-primary transition"><X size={20} /></button>
         </div>
         <div className="space-y-4">
-          <p className="text-xs text-text-muted">Write off damaged/expired/unsellable stock. This deducts the quantity from the selected shop&apos;s inventory.</p>
+          <p className="text-xs text-text-muted">Request to write off damaged/expired/unsellable stock. It goes to <strong>Pending Sales</strong> for an admin to approve. Stock is only deducted once approved.</p>
           <div>
             <label className="block text-sm font-medium text-text-primary mb-1">Shop</label>
             <select value={branchId} onChange={(e) => { setBranchId(e.target.value); setProductId(''); }} className="w-full border border-input-border rounded px-3 py-2 text-sm bg-input-bg">
@@ -168,7 +175,7 @@ function RecordDisposalModal({ branches, onClose }: { branches: { id: string; na
           {error && <p className="text-sm text-accent-red">{error}</p>}
           <div className="flex justify-end gap-2">
             <button onClick={onClose} className="bg-white/10 text-text-primary px-4 py-2 rounded text-sm font-medium">Cancel</button>
-            <button onClick={submit} disabled={createDisposal.isPending} className="bg-btn-danger text-white px-4 py-2 rounded text-sm font-medium disabled:opacity-60">{createDisposal.isPending ? 'Recording...' : 'Record Disposal'}</button>
+            <button onClick={submit} disabled={createDisposal.isPending} className="bg-btn-danger text-white px-4 py-2 rounded text-sm font-medium disabled:opacity-60">{createDisposal.isPending ? 'Submitting...' : 'Submit Request'}</button>
           </div>
         </div>
       </div>

@@ -15,6 +15,7 @@ import {
   Archive,
   ChevronDown,
   LogOut,
+  Settings as SettingsIcon,
 } from 'lucide-react';
 
 interface NavItem {
@@ -52,6 +53,7 @@ const navItems: NavItem[] = [
       { label: 'Brands Archive', href: '/dashboard/archive/brands' },
     ],
   },
+  { label: 'Settings', href: '/dashboard/settings', icon: <SettingsIcon size={16} /> },
 ];
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
@@ -137,14 +139,19 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             <span className="text-lg font-bold text-text-primary">Vape Shop</span>
           </Link>
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent-primary text-xs font-bold text-white">
-                {user?.firstName?.[0]}{user?.lastName?.[0]}
-              </div>
+            <Link href="/dashboard/settings" className="flex items-center gap-2 rounded-lg px-1.5 py-1 hover:bg-white/5 transition-colors" title="Settings">
+              {user?.avatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={user.avatarUrl} alt="" className="h-8 w-8 rounded-full object-cover" />
+              ) : (
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent-primary text-xs font-bold text-white">
+                  {user?.firstName?.[0]}{user?.lastName?.[0]}
+                </div>
+              )}
               <span className="text-sm font-medium text-text-primary hidden sm:inline">
                 {user?.firstName} {user?.lastName}
               </span>
-            </div>
+            </Link>
             <button
               onClick={handleLogout}
               className="flex items-center gap-1 rounded-lg p-2 text-sm text-text-secondary hover:text-accent-red hover:bg-accent-red/10 transition-colors"

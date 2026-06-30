@@ -35,8 +35,10 @@ export interface AuthUser {
   email: string;
   firstName: string;
   lastName: string;
+  middleInitial?: string | null;
   role: Role;
   branch?: BranchRef | null;
+  avatarUrl?: string | null;
   mustChangePassword?: boolean;
 }
 
@@ -199,7 +201,10 @@ export interface Disposal {
   unitPrice: number;
   value: number;
   reason: string | null;
+  status: 'PENDING' | 'APPROVED' | 'DECLINED';
   createdBy: string;
+  decidedBy: string | null;
+  decidedAt: string | null;
   createdAt: string;
 }
 

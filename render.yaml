@@ -21,8 +21,11 @@ services:
     plan: free
     rootDir: backend
     buildCommand: npm install --include=dev && npx prisma generate && npm run build
-    startCommand: npm run start:prod
-    healthCheckPath: /api/v1/health
+    # Apply pending migrations (and ensure the Owner account exists) on every
+    # deploy/boot before the API starts. Both steps are idempotent; if seeding
+    # ever fails it won't block the service from starting.
+    startCommand: npx prisma migrate deploy && (npm run prisma:seed || echo "seed skipped") && npm run start:prod
+    healthCheckPath: /health
     envVars:
       - key: NODE_ENV
         value: production

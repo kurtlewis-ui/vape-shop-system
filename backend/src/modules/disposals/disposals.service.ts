@@ -1,9 +1,10 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma, DisposalStatus } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateDisposalDto } from './dto/create-disposal.dto';
 import { QueryDisposalDto } from './dto/query-disposal.dto';
@@ -14,8 +15,8 @@ export class DisposalsService {
   constructor(private prisma: PrismaService) {}
 
   /**
-   * Write off stock: validates availability at the branch, decrements
-   * inventory, and records a disposal with price/value snapshots.
+   * Request a disposal. It starts as PENDING and does NOT change stock yet —
+   * an Admin approves or declines it. Stock is only deducted on approval.
    */
   async create(dto: CreateDisposalDto, actor: RequestUser) {
     const branchId = await this.resolveBranchForActor(actor, dto.branchId);
@@ -28,36 +29,70 @@ export class DisposalsService {
       throw new NotFoundException('Product not found');
     }
 
+    const unitPrice = new Prisma.Decimal(product.sellingPrice);
+    const value = unitPrice.mul(dto.quantity);
+
+    const disposal = await this.prisma.disposal.create({
+      data: {
+        branchId,
+        productId: product.id,
+        productName: product.name,
+        brandName: product.brand.name,
+        quantity: dto.quantity,
+        unitPrice,
+        value,
+        reason: dto.reason?.trim() || null,
+        status: DisposalStatus.PENDING,
+        createdById: actor.userId,
+      },
+      include: this.includeFull(),
+    });
+
+    await this.audit(actor.userId, 'DISPOSAL_REQUESTED', disposal.id, {
+      product: product.name,
+      quantity: dto.quantity,
+    });
+
+    return this.serialize(disposal);
+  }
+
+  /** Approve a pending disposal: validates + deducts stock at the branch. */
+  async approve(id: string, actor: RequestUser) {
+    const disposal = await this.prisma.disposal.findUnique({ where: { id } });
+    if (!disposal) {
+      throw new NotFoundException('Disposal not found');
+    }
+    if (disposal.status !== DisposalStatus.PENDING) {
+      throw new BadRequestException(`Disposal is already ${disposal.status.toLowerCase()}`);
+    }
+
     return this.prisma.$transaction(async (tx) => {
-      const inv = await tx.inventory.findUnique({
-        where: { productId_branchId: { productId: product.id, branchId } },
-      });
-      const available = inv?.quantity ?? 0;
-      if (available < dto.quantity) {
-        throw new BadRequestException(
-          `Insufficient stock to dispose (need ${dto.quantity}, have ${available})`,
-        );
+      if (disposal.productId) {
+        const inv = await tx.inventory.findUnique({
+          where: {
+            productId_branchId: { productId: disposal.productId, branchId: disposal.branchId },
+          },
+        });
+        const available = inv?.quantity ?? 0;
+        if (available < disposal.quantity) {
+          throw new BadRequestException(
+            `Insufficient stock to dispose (need ${disposal.quantity}, have ${available})`,
+          );
+        }
+        await tx.inventory.update({
+          where: {
+            productId_branchId: { productId: disposal.productId, branchId: disposal.branchId },
+          },
+          data: { quantity: { decrement: disposal.quantity } },
+        });
       }
 
-      await tx.inventory.update({
-        where: { productId_branchId: { productId: product.id, branchId } },
-        data: { quantity: { decrement: dto.quantity } },
-      });
-
-      const unitPrice = new Prisma.Decimal(product.sellingPrice);
-      const value = unitPrice.mul(dto.quantity);
-
-      const disposal = await tx.disposal.create({
+      const updated = await tx.disposal.update({
+        where: { id },
         data: {
-          branchId,
-          productId: product.id,
-          productName: product.name,
-          brandName: product.brand.name,
-          quantity: dto.quantity,
-          unitPrice,
-          value,
-          reason: dto.reason?.trim() || null,
-          createdById: actor.userId,
+          status: DisposalStatus.APPROVED,
+          decidedById: actor.userId,
+          decidedAt: new Date(),
         },
         include: this.includeFull(),
       });
@@ -65,22 +100,50 @@ export class DisposalsService {
       await tx.auditLog.create({
         data: {
           userId: actor.userId,
-          action: 'DISPOSAL_RECORDED',
+          action: 'DISPOSAL_APPROVED',
           entityType: 'Disposal',
-          entityId: disposal.id,
-          newValues: { product: product.name, quantity: dto.quantity },
+          entityId: id,
+          newValues: { product: disposal.productName, quantity: disposal.quantity },
         },
       });
 
-      return this.serialize(disposal);
+      return this.serialize(updated);
     });
   }
 
-  async findAll(query: QueryDisposalDto, actor: RequestUser) {
+  /** Decline a pending disposal (no stock change). */
+  async decline(id: string, actor: RequestUser) {
+    const disposal = await this.prisma.disposal.findUnique({ where: { id } });
+    if (!disposal) {
+      throw new NotFoundException('Disposal not found');
+    }
+    if (disposal.status !== DisposalStatus.PENDING) {
+      throw new BadRequestException(`Disposal is already ${disposal.status.toLowerCase()}`);
+    }
+
+    const updated = await this.prisma.disposal.update({
+      where: { id },
+      data: {
+        status: DisposalStatus.DECLINED,
+        decidedById: actor.userId,
+        decidedAt: new Date(),
+      },
+      include: this.includeFull(),
+    });
+
+    await this.audit(actor.userId, 'DISPOSAL_DECLINED', id, {
+      product: disposal.productName,
+    });
+
+    return this.serialize(updated);
+  }
+
+  async findAll(query: QueryDisposalDto, actor: RequestUser, status?: DisposalStatus) {
     const { page = 1, limit = 50, search, branchId, startDate, endDate } = query;
     const skip = (page - 1) * limit;
 
     const where: Prisma.DisposalWhereInput = {};
+    if (status) where.status = status;
 
     if (actor.role === 'Staff') {
       const me = await this.prisma.user.findUnique({
@@ -168,6 +231,7 @@ export class DisposalsService {
       branch: { select: { id: true, name: true } },
       product: { select: { id: true, name: true } },
       createdBy: { select: { firstName: true, lastName: true } },
+      decidedBy: { select: { firstName: true, lastName: true } },
     } satisfies Prisma.DisposalInclude;
   }
 
@@ -182,10 +246,27 @@ export class DisposalsService {
       unitPrice: Number(d.unitPrice),
       value: Number(d.value),
       reason: d.reason,
+      status: d.status,
       createdBy: d.createdBy
         ? `${d.createdBy.firstName} ${d.createdBy.lastName}`.trim()
         : 'System',
+      decidedBy: d.decidedBy
+        ? `${d.decidedBy.firstName} ${d.decidedBy.lastName}`.trim()
+        : null,
+      decidedAt: d.decidedAt,
       createdAt: d.createdAt,
     };
+  }
+
+  private audit(userId: string, action: string, entityId: string, newValues: any) {
+    return this.prisma.auditLog.create({
+      data: {
+        userId,
+        action,
+        entityType: 'Disposal',
+        entityId,
+        newValues: newValues ?? undefined,
+      },
+    });
   }
 }

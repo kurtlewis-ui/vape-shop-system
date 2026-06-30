@@ -64,6 +64,7 @@ export class UsersService {
         roleId: createUserDto.roleId,
         phone: createUserDto.phone,
         branchId: createUserDto.branchId ?? null,
+        avatarUrl: createUserDto.avatarUrl || null,
         mustChangePassword: true, // Force password change on first login
       },
       include: {
@@ -207,16 +208,6 @@ export class UsersService {
       throw new NotFoundException('User not found');
     }
 
-    // Prevent modifying Owner role users (unless you are owner)
-    const updaterRole = await this.prisma.user.findUnique({
-      where: { id: updatedBy },
-      include: { role: true },
-    });
-
-    if (currentUser.role.name === 'Owner' && updaterRole?.role.name !== 'Owner') {
-      throw new ForbiddenException('Cannot modify Owner accounts');
-    }
-
     // If changing role, verify new role exists
     if (updateUserDto.roleId) {
       const newRole = await this.prisma.role.findUnique({
@@ -225,11 +216,6 @@ export class UsersService {
 
       if (!newRole) {
         throw new NotFoundException('Role not found');
-      }
-
-      // Prevent changing Owner to another role
-      if (currentUser.role.name === 'Owner') {
-        throw new ForbiddenException('Cannot change Owner role');
       }
     }
 
@@ -313,16 +299,6 @@ export class UsersService {
       throw new NotFoundException('User not found');
     }
 
-    // Only an Owner can change an Owner account's password
-    const resetter = await this.prisma.user.findUnique({
-      where: { id: resetBy },
-      include: { role: true },
-    });
-
-    if (user.role.name === 'Owner' && resetter?.role.name !== 'Owner') {
-      throw new ForbiddenException('Cannot change an Owner account password');
-    }
-
     // Hash and store the new password
     const bcryptRounds = parseInt(this.config.get<string>('BCRYPT_ROUNDS') ?? '12', 10) || 12;
     const passwordHash = await bcrypt.hash(newPassword, bcryptRounds);
@@ -370,11 +346,6 @@ export class UsersService {
 
     if (!user) {
       throw new NotFoundException('User not found');
-    }
-
-    // Prevent deleting Owner role users
-    if (user.role.name === 'Owner') {
-      throw new ForbiddenException('Cannot delete Owner accounts');
     }
 
     // Prevent self-deletion

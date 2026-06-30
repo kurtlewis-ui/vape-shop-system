@@ -31,7 +31,7 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
-  @Roles('Owner', 'Admin')
+  @Roles('Admin')
   @ApiOperation({ summary: 'Create new user' })
   @ApiResponse({ status: 201, description: 'User created successfully' })
   @ApiResponse({ status: 403, description: 'Forbidden - insufficient permissions' })
@@ -46,7 +46,7 @@ export class UsersController {
   }
 
   @Get()
-  @Roles('Owner', 'Admin')
+  @Roles('Admin')
   @ApiOperation({ summary: 'Get all users' })
   @ApiResponse({ status: 200, description: 'Users retrieved successfully' })
   async findAll(@Query() query: QueryUserDto) {
@@ -60,7 +60,7 @@ export class UsersController {
   }
 
   @Get('roles')
-  @Roles('Owner', 'Admin')
+  @Roles('Admin')
   @ApiOperation({ summary: 'Get all roles' })
   @ApiResponse({ status: 200, description: 'Roles retrieved successfully' })
   async getRoles() {
@@ -73,7 +73,7 @@ export class UsersController {
   }
 
   @Get('archived')
-  @Roles('Owner', 'Admin')
+  @Roles('Admin')
   @ApiOperation({ summary: 'List archived (soft-deleted) users' })
   @ApiResponse({ status: 200, description: 'Archived users retrieved' })
   async findArchived(@Query() query: QueryUserDto) {
@@ -91,8 +91,8 @@ export class UsersController {
   @ApiResponse({ status: 200, description: 'User retrieved successfully' })
   @ApiResponse({ status: 404, description: 'User not found' })
   async findOne(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: RequestUser) {
-    // Allow users to view their own profile, or Owner/Admin to view anyone
-    if (user.userId !== id && !['Owner', 'Admin'].includes(user.role)) {
+    // Allow users to view their own profile, or Admin to view anyone
+    if (user.userId !== id && !['Admin'].includes(user.role)) {
       return {
         success: false,
         error: {
@@ -111,7 +111,7 @@ export class UsersController {
   }
 
   @Patch(':id')
-  @Roles('Owner', 'Admin')
+  @Roles('Admin')
   @ApiOperation({ summary: 'Update user' })
   @ApiResponse({ status: 200, description: 'User updated successfully' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
@@ -130,7 +130,7 @@ export class UsersController {
   }
 
   @Patch(':id/password')
-  @Roles('Owner', 'Admin')
+  @Roles('Admin')
   @ApiOperation({ summary: 'Reset a user password (Owner/Admin)' })
   @ApiResponse({ status: 200, description: 'Password updated successfully' })
   @ApiResponse({ status: 400, description: 'Passwords do not match or invalid' })
@@ -155,7 +155,7 @@ export class UsersController {
   }
 
   @Post(':id/restore')
-  @Roles('Owner', 'Admin')
+  @Roles('Admin')
   @ApiOperation({ summary: 'Restore an archived user' })
   @ApiResponse({ status: 200, description: 'User restored successfully' })
   @ApiResponse({ status: 404, description: 'Archived user not found' })
@@ -172,11 +172,11 @@ export class UsersController {
   }
 
   @Delete(':id')
-  @Roles('Owner')
+  @Roles('Admin')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete user (soft delete)' })
   @ApiResponse({ status: 204, description: 'User deleted successfully' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Owner role required' })
+  @ApiResponse({ status: 403, description: 'Forbidden - Admin role required' })
   @ApiResponse({ status: 404, description: 'User not found' })
   async remove(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: RequestUser) {
     await this.usersService.remove(id, user.userId);

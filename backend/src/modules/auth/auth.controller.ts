@@ -8,12 +8,14 @@ import {
   Req,
   UseGuards,
   Get,
+  Patch,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { Response, Request } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 import { Public } from '../../common/decorators/public.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { JwtRefreshAuthGuard } from './guards/jwt-refresh-auth.guard';
@@ -121,16 +123,22 @@ export class AuthController {
 
   @Get('me')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Get current user info' })
+  @ApiOperation({ summary: 'Get current user profile' })
   @ApiResponse({ status: 200, description: 'Current user retrieved' })
   async getCurrentUser(@CurrentUser() user: RequestUser) {
-    return {
-      success: true,
-      data: {
-        userId: user.userId,
-        email: user.email,
-        role: user.role,
-      },
-    };
+    const data = await this.authService.getProfile(user.userId);
+    return { success: true, data };
+  }
+
+  @Patch('profile')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update your own profile (name, email, photo)' })
+  @ApiResponse({ status: 200, description: 'Profile updated' })
+  async updateProfile(
+    @CurrentUser() user: RequestUser,
+    @Body() dto: UpdateProfileDto,
+  ) {
+    const data = await this.authService.updateProfile(user.userId, dto);
+    return { success: true, data };
   }
 }
