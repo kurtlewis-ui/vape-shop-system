@@ -111,10 +111,10 @@ export default function SalesPendingPage() {
       <div className="flex items-center justify-between mb-6 flex-wrap gap-2">
         <h1 className="text-2xl font-bold text-text-primary">Pending Sales</h1>
         <div className="flex items-center gap-2">
-          <button onClick={handleApproveAll} disabled={busy || sales.length === 0} className="flex items-center gap-1.5 btn-grad px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50">
+          <button onClick={handleApproveAll} disabled={busy || sales.length === 0} className="flex items-center gap-1.5 btn-grad px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-70">
             <CheckCircle size={16} /> Approve All
           </button>
-          <button onClick={handleDeclineAll} disabled={busy || sales.length === 0} className="flex items-center gap-1.5 px-4 py-2 bg-accent-red text-white rounded-lg text-sm font-medium hover:opacity-90 transition disabled:opacity-50">
+          <button onClick={handleDeclineAll} disabled={busy || sales.length === 0} className="flex items-center gap-1.5 px-4 py-2 bg-accent-red text-white rounded-lg text-sm font-medium hover:opacity-90 transition disabled:opacity-70">
             <XCircle size={16} /> Decline All
           </button>
         </div>
@@ -231,14 +231,14 @@ export default function SalesPendingPage() {
             <button
               onClick={() => { const n = disposals.length; if (!n) return; runSafe(async () => { await Promise.all(disposals.map((d) => approveDisposal.mutateAsync(d.id))); setActionStatus(`✓ All ${n} disposal${n === 1 ? '' : 's'} approved (stock deducted).`); }); }}
               disabled={disposals.length === 0}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-accent-green text-white rounded-lg text-sm font-medium hover:opacity-90 transition disabled:opacity-50"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-accent-green text-white rounded-lg text-sm font-medium hover:opacity-90 transition disabled:opacity-70"
             >
               <CheckCircle size={15} /> Approve All
             </button>
             <button
               onClick={() => { const n = disposals.length; if (!n) return; runSafe(async () => { await Promise.all(disposals.map((d) => declineDisposal.mutateAsync(d.id))); setActionStatus(`All ${n} disposal${n === 1 ? '' : 's'} declined.`); }); }}
               disabled={disposals.length === 0}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-accent-red text-white rounded-lg text-sm font-medium hover:opacity-90 transition disabled:opacity-50"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-accent-red text-white rounded-lg text-sm font-medium hover:opacity-90 transition disabled:opacity-70"
             >
               <XCircle size={15} /> Decline All
             </button>

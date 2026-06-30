@@ -265,14 +265,14 @@ export function useRestoreProduct() {
 export function useUsers(search?: string) {
   return useQuery({
     queryKey: ['users', { search }],
-    queryFn: () => getList<FullUser>('/users', { limit: 200, search: search || undefined }),
+    queryFn: () => getList<FullUser>('/users', { limit: 100, search: search || undefined }),
   });
 }
 
 export function useArchivedUsers() {
   return useQuery({
     queryKey: ['users', 'archived'],
-    queryFn: () => getList<FullUser>('/users/archived', { limit: 200 }),
+    queryFn: () => getList<FullUser>('/users/archived', { limit: 100 }),
   });
 }
 
