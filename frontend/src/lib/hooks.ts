@@ -473,7 +473,7 @@ export function useTopProducts(branchId?: string) {
 // ===========================================================================
 // DISPOSALS
 // ===========================================================================
-export function useDisposals(params?: { search?: string; branchId?: string; startDate?: string; endDate?: string }) {
+export function useDisposals(params?: { search?: string; branchId?: string; startDate?: string; endDate?: string; status?: string }) {
   return useQuery({
     queryKey: ['disposals', params ?? {}],
     queryFn: async () => {
@@ -484,6 +484,7 @@ export function useDisposals(params?: { search?: string; branchId?: string; star
           branchId: params?.branchId || undefined,
           startDate: params?.startDate || undefined,
           endDate: params?.endDate || undefined,
+          status: params?.status || undefined,
         },
       });
       return {

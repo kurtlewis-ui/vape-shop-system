@@ -24,18 +24,20 @@ export default function DisposalsPage() {
 
   const { data, isLoading, isError, error } = useDisposals({
     search, branchId: selectedShop || undefined, startDate: startDate || undefined, endDate: endDate || undefined,
+    status: 'APPROVED',
   });
   const disposals = data?.data ?? [];
   const summary = data?.summary ?? { totalValue: 0, totalQuantity: 0, count: 0 };
 
   return (
     <div className="p-6 bg-page-bg min-h-screen">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-1">
         <h1 className="text-2xl font-bold text-text-primary">Disposals</h1>
         <button onClick={() => setShowModal(true)} className="flex items-center gap-2 btn-grad px-4 py-2 rounded-lg text-sm font-medium">
           <Plus size={16} /> Request Disposal
         </button>
       </div>
+      <p className="text-sm text-text-muted mb-6">Approved disposals (stock that has been written off). New requests go to <strong>Sales → Pending</strong> for approval.</p>
 
       <div className="bg-card-bg rounded-xl border border-card-border shadow-sm mb-4">
         <div className="p-4 flex flex-wrap items-center gap-3">
@@ -77,7 +79,7 @@ export default function DisposalsPage() {
               ) : isError ? (
                 <tr><td colSpan={10} className="text-center py-8 text-accent-red">{getApiErrorMessage(error)}</td></tr>
               ) : disposals.length === 0 ? (
-                <tr><td colSpan={10} className="px-4 py-12 text-center text-text-muted">No disposals yet.</td></tr>
+                <tr><td colSpan={10} className="px-4 py-12 text-center text-text-muted">No approved disposals yet.</td></tr>
               ) : disposals.map((d, idx) => (
                 <tr key={d.id} className="border-b border-card-border hover:bg-white/5 transition">
                   <td className="px-4 py-3 text-sm text-text-primary">{idx + 1}</td>
