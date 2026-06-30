@@ -16,6 +16,8 @@ import {
 } from '@/lib/hooks';
 import { getApiErrorMessage } from '@/lib/api';
 import { parseCsv, toCsv, downloadCsv, readFileAsText } from '@/lib/csv';
+import { fileToResizedDataUrl } from '@/lib/image';
+import { useAuthStore } from '@/lib/store';
 import type { Product, ImportResult, RestockResult } from '@/lib/types';
 
 const ENTRIES_OPTIONS = [5, 10, 25, 50, 100, 'All'] as const;
@@ -31,6 +33,7 @@ export default function ProductsPage() {
   const { data: brandData } = useBrands();
   const branches = branchData?.data ?? [];
   const brands = brandData?.data ?? [];
+  const isAdmin = useAuthStore((s) => s.user?.role?.name === 'Admin');
 
   const { data, isLoading, isError, error } = useProducts({ search, brandId: brandFilter || undefined });
   const products = data?.data ?? [];
@@ -51,6 +54,7 @@ export default function ProductsPage() {
   const [formBrand, setFormBrand] = useState('');
   const [formPrice, setFormPrice] = useState('');
   const [formAlert, setFormAlert] = useState('0');
+  const [formImage, setFormImage] = useState<string | null>(null);
   const [formQuantities, setFormQuantities] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -64,6 +68,7 @@ export default function ProductsPage() {
 
   function openAddModal() {
     setFormName(''); setFormBrand(brands[0]?.id ?? ''); setFormPrice(''); setFormAlert('0');
+    setFormImage(null);
     const q: Record<string, string> = {}; branchesForForm.forEach((b) => (q[b.id] = ''));
     setFormQuantities(q); setFormError(null); setShowAddModal(true);
   }
@@ -71,6 +76,7 @@ export default function ProductsPage() {
     setEditingProduct(product);
     setFormName(product.name); setFormBrand(product.brand?.id ?? brands[0]?.id ?? '');
     setFormPrice(product.sellingPrice.toString()); setFormAlert(product.quantityAlert.toString());
+    setFormImage(product.image ?? null);
     const q: Record<string, string> = {};
     branchesForForm.forEach((b) => { q[b.id] = (product.quantities.find((x) => x.branchId === b.id)?.quantity ?? 0).toString(); });
     setFormQuantities(q); setFormError(null); setShowEditModal(true);
@@ -83,7 +89,7 @@ export default function ProductsPage() {
     if (!formBrand) { setFormError('Please select a brand.'); return; }
     setFormError(null);
     try {
-      await createProduct.mutateAsync({ name: formName.trim(), brandId: formBrand, sellingPrice: parseFloat(formPrice) || 0, quantityAlert: parseInt(formAlert) || 0, quantities: buildQuantitiesPayload() });
+      await createProduct.mutateAsync({ name: formName.trim(), brandId: formBrand, sellingPrice: parseFloat(formPrice) || 0, quantityAlert: parseInt(formAlert) || 0, image: formImage ?? undefined, quantities: buildQuantitiesPayload() });
       setShowAddModal(false);
     } catch (e) { setFormError(getApiErrorMessage(e)); }
   }
@@ -92,7 +98,7 @@ export default function ProductsPage() {
     if (!formBrand) { setFormError('Please select a brand.'); return; }
     setFormError(null);
     try {
-      await updateProduct.mutateAsync({ id: editingProduct.id, name: formName.trim(), brandId: formBrand, sellingPrice: parseFloat(formPrice) || 0, quantityAlert: parseInt(formAlert) || 0, quantities: buildQuantitiesPayload() });
+      await updateProduct.mutateAsync({ id: editingProduct.id, name: formName.trim(), brandId: formBrand, sellingPrice: parseFloat(formPrice) || 0, quantityAlert: parseInt(formAlert) || 0, image: formImage ?? '', quantities: buildQuantitiesPayload() });
       setEditingProduct(null); setShowEditModal(false);
     } catch (e) { setFormError(getApiErrorMessage(e)); }
   }
@@ -156,6 +162,7 @@ export default function ProductsPage() {
           <thead>
             <tr className="bg-table-header">
               <th className="text-left px-3 py-3 text-xs font-semibold uppercase text-table-header-text w-10">#</th>
+              <th className="text-left px-3 py-3 text-xs font-semibold uppercase text-table-header-text w-16">Image</th>
               <th className="text-left px-3 py-3 text-xs font-semibold uppercase text-table-header-text">Name</th>
               <th className="text-left px-3 py-3 text-xs font-semibold uppercase text-table-header-text">Quantity</th>
               <th className="text-left px-3 py-3 text-xs font-semibold uppercase text-table-header-text">Brand</th>
@@ -166,15 +173,23 @@ export default function ProductsPage() {
           </thead>
           <tbody>
             {isLoading ? (
-              <tr><td colSpan={7} className="text-center py-8 text-text-muted"><Loader2 className="inline animate-spin mr-2" size={16} />Loading products...</td></tr>
+              <tr><td colSpan={8} className="text-center py-8 text-text-muted"><Loader2 className="inline animate-spin mr-2" size={16} />Loading products...</td></tr>
             ) : isError ? (
-              <tr><td colSpan={7} className="text-center py-8 text-accent-red">{getApiErrorMessage(error)}</td></tr>
+              <tr><td colSpan={8} className="text-center py-8 text-accent-red">{getApiErrorMessage(error)}</td></tr>
             ) : displayProducts.length === 0 ? (
-              <tr><td colSpan={7} className="text-center py-8 text-text-muted">No products found. Add one or import a CSV.</td></tr>
+              <tr><td colSpan={8} className="text-center py-8 text-text-muted">No products found. Add one or import a CSV.</td></tr>
             ) : (
               displayProducts.map((product, i) => (
                 <tr key={product.id} className="border-t border-card-border hover:bg-white/5 transition-colors align-top">
                   <td className="px-3 py-3 text-sm text-accent-blue font-medium">{(entriesPerPage === 'All' ? 0 : (currentPage - 1) * (entriesPerPage as number)) + i + 1}</td>
+                  <td className="px-3 py-3">
+                    {product.image ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={product.image} alt={product.name} className="w-10 h-10 rounded object-cover bg-white/10" />
+                    ) : (
+                      <div className="w-10 h-10 rounded bg-white/10 flex items-center justify-center text-[10px] text-text-muted">No Img</div>
+                    )}
+                  </td>
                   <td className="px-3 py-3 text-sm text-text-primary font-medium">{product.name}</td>
                   <td className="px-3 py-3 text-sm">
                     {shopFilter ? (
@@ -218,10 +233,10 @@ export default function ProductsPage() {
       </div>
 
       {showAddModal && (
-        <ProductFormModal title="Add New Product" onClose={() => setShowAddModal(false)} onSubmit={handleAdd} error={formError} buttonLabel={createProduct.isPending ? 'Saving...' : 'Save Product'} disabled={createProduct.isPending} formName={formName} setFormName={setFormName} formBrand={formBrand} setFormBrand={setFormBrand} formPrice={formPrice} setFormPrice={setFormPrice} formAlert={formAlert} setFormAlert={setFormAlert} formQuantities={formQuantities} setFormQuantities={setFormQuantities} branches={branchesForForm} brands={brands} />
+        <ProductFormModal title="Add New Product" onClose={() => setShowAddModal(false)} onSubmit={handleAdd} error={formError} buttonLabel={createProduct.isPending ? 'Saving...' : 'Save Product'} disabled={createProduct.isPending} formName={formName} setFormName={setFormName} formBrand={formBrand} setFormBrand={setFormBrand} formPrice={formPrice} setFormPrice={setFormPrice} formAlert={formAlert} setFormAlert={setFormAlert} formImage={formImage} setFormImage={setFormImage} isAdmin={isAdmin} formQuantities={formQuantities} setFormQuantities={setFormQuantities} branches={branchesForForm} brands={brands} />
       )}
       {showEditModal && editingProduct && (
-        <ProductFormModal title="Edit Product" onClose={() => { setShowEditModal(false); setEditingProduct(null); }} onSubmit={handleEdit} error={formError} buttonLabel={updateProduct.isPending ? 'Saving...' : 'Update Product'} disabled={updateProduct.isPending} formName={formName} setFormName={setFormName} formBrand={formBrand} setFormBrand={setFormBrand} formPrice={formPrice} setFormPrice={setFormPrice} formAlert={formAlert} setFormAlert={setFormAlert} formQuantities={formQuantities} setFormQuantities={setFormQuantities} branches={branchesForForm} brands={brands} />
+        <ProductFormModal title="Edit Product" onClose={() => { setShowEditModal(false); setEditingProduct(null); }} onSubmit={handleEdit} error={formError} buttonLabel={updateProduct.isPending ? 'Saving...' : 'Update Product'} disabled={updateProduct.isPending} formName={formName} setFormName={setFormName} formBrand={formBrand} setFormBrand={setFormBrand} formPrice={formPrice} setFormPrice={setFormPrice} formAlert={formAlert} setFormAlert={setFormAlert} formImage={formImage} setFormImage={setFormImage} isAdmin={isAdmin} formQuantities={formQuantities} setFormQuantities={setFormQuantities} branches={branchesForForm} brands={brands} />
       )}
       {showArchiveModal && archivingProduct && (
         <Modal title="Confirm Archive" onClose={() => { setShowArchiveModal(false); setArchivingProduct(null); }}>
@@ -314,19 +329,63 @@ interface RestockRow { productId: string; branchId: string; quantity: string; }
 
 function RestockModal({ products, branches, onClose }: { products: Product[]; branches: { id: string; name: string }[]; onClose: () => void }) {
   const restock = useRestock();
+  const [mode, setMode] = useState<'manual' | 'csv'>('manual');
   const [rows, setRows] = useState<RestockRow[]>([{ productId: products[0]?.id ?? '', branchId: branches[0]?.id ?? '', quantity: '' }]);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<RestockResult | null>(null);
+
+  // CSV mode state
+  const [csvItems, setCsvItems] = useState<RestockItem[]>([]);
+  const [fileName, setFileName] = useState('');
 
   const setRow = (i: number, patch: Partial<RestockRow>) => setRows((rs) => rs.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
   const addRow = () => setRows((rs) => [...rs, { productId: products[0]?.id ?? '', branchId: branches[0]?.id ?? '', quantity: '' }]);
   const removeRow = (i: number) => setRows((rs) => rs.filter((_, idx) => idx !== i));
 
+  const branchNameSet = new Set(branches.map((b) => b.name.toLowerCase()));
+
+  async function onFile(file: File) {
+    setError(null); setResult(null); setCsvItems([]); setFileName('');
+    try {
+      const text = await readFileAsText(file);
+      const { headers, rows: csvRows } = parseCsv(text);
+      if (!headers.some((h) => h.toLowerCase() === 'name')) {
+        setError('This file does not look like a products export (missing a "Name" column).');
+        return;
+      }
+      // Every header that matches a shop name is treated as a stock column.
+      const branchCols = headers.filter((h) => branchNameSet.has(h.toLowerCase()));
+      if (branchCols.length === 0) {
+        setError('No shop columns found in the file. Use the Export button to get the correct format.');
+        return;
+      }
+      const items: RestockItem[] = [];
+      for (const r of csvRows) {
+        const productName = r.Name?.trim();
+        if (!productName) continue;
+        for (const col of branchCols) {
+          const qty = Number(r[col]) || 0;
+          if (qty > 0) items.push({ productName, branchName: col, quantity: qty });
+        }
+      }
+      setCsvItems(items);
+      setFileName(file.name);
+    } catch {
+      setError('Could not read the file.');
+    }
+  }
+
   async function submit() {
-    const items: RestockItem[] = rows
-      .filter((r) => r.productId && r.branchId && Number(r.quantity) > 0)
-      .map((r) => ({ productId: r.productId, branchId: r.branchId, quantity: Number(r.quantity) }));
-    if (items.length === 0) { setError('Add at least one row with a quantity greater than zero.'); return; }
+    let items: RestockItem[];
+    if (mode === 'csv') {
+      items = csvItems;
+      if (items.length === 0) { setError('No stock to add. Edit the shop columns in the exported file (numbers greater than 0) and re-upload.'); return; }
+    } else {
+      items = rows
+        .filter((r) => r.productId && r.branchId && Number(r.quantity) > 0)
+        .map((r) => ({ productId: r.productId, branchId: r.branchId, quantity: Number(r.quantity) }));
+      if (items.length === 0) { setError('Add at least one row with a quantity greater than zero.'); return; }
+    }
     setError(null);
     try { setResult(await restock.mutateAsync(items)); }
     catch (e) { setError(getApiErrorMessage(e)); }
@@ -335,55 +394,114 @@ function RestockModal({ products, branches, onClose }: { products: Product[]; br
   return (
     <Modal title="Restock Products" onClose={onClose}>
       <div className="space-y-4">
-        <p className="text-xs text-text-muted">Add stock to products at a shop. The quantity is <strong>added</strong> to the current stock.</p>
-        {products.length === 0 || branches.length === 0 ? (
-          <p className="text-sm text-accent-orange">You need at least one product and one shop before restocking.</p>
-        ) : (
-          <div className="space-y-2">
-            {rows.map((row, i) => (
-              <div key={i} className="flex items-center gap-2">
-                <select value={row.productId} onChange={(e) => setRow(i, { productId: e.target.value })} className="flex-1 border border-input-border rounded px-2 py-1.5 text-sm bg-input-bg">
-                  {products.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-                </select>
-                <select value={row.branchId} onChange={(e) => setRow(i, { branchId: e.target.value })} className="w-36 border border-input-border rounded px-2 py-1.5 text-sm bg-input-bg">
-                  {branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
-                </select>
-                <input type="number" min="1" placeholder="+Qty" value={row.quantity} onChange={(e) => setRow(i, { quantity: e.target.value })} className="w-20 border border-input-border rounded px-2 py-1.5 text-sm bg-input-bg" />
-                <button onClick={() => removeRow(i)} className="p-1.5 text-accent-red hover:bg-red-500/10 rounded" title="Remove"><Trash2 size={15} /></button>
+        <div className="flex gap-1 p-1 bg-white/5 rounded-lg w-fit">
+          <button onClick={() => { setMode('manual'); setError(null); setResult(null); }} className={`px-3 py-1.5 rounded-md text-sm font-medium transition ${mode === 'manual' ? 'bg-accent-primary text-white' : 'text-text-secondary hover:text-text-primary'}`}>Manual</button>
+          <button onClick={() => { setMode('csv'); setError(null); setResult(null); }} className={`px-3 py-1.5 rounded-md text-sm font-medium transition ${mode === 'csv' ? 'bg-accent-primary text-white' : 'text-text-secondary hover:text-text-primary'}`}>Upload exported CSV</button>
+        </div>
+
+        {mode === 'manual' ? (
+          <>
+            <p className="text-xs text-text-muted">Add stock to products at a shop. The quantity is <strong>added</strong> to the current stock.</p>
+            {products.length === 0 || branches.length === 0 ? (
+              <p className="text-sm text-accent-orange">You need at least one product and one shop before restocking.</p>
+            ) : (
+              <div className="space-y-2">
+                {rows.map((row, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <select value={row.productId} onChange={(e) => setRow(i, { productId: e.target.value })} className="flex-1 border border-input-border rounded px-2 py-1.5 text-sm bg-input-bg">
+                      {products.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                    </select>
+                    <select value={row.branchId} onChange={(e) => setRow(i, { branchId: e.target.value })} className="w-36 border border-input-border rounded px-2 py-1.5 text-sm bg-input-bg">
+                      {branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+                    </select>
+                    <input type="number" min="1" placeholder="+Qty" value={row.quantity} onChange={(e) => setRow(i, { quantity: e.target.value })} className="w-20 border border-input-border rounded px-2 py-1.5 text-sm bg-input-bg" />
+                    <button onClick={() => removeRow(i)} className="p-1.5 text-accent-red hover:bg-red-500/10 rounded" title="Remove"><Trash2 size={15} /></button>
+                  </div>
+                ))}
+                <button onClick={addRow} className="flex items-center gap-1 text-sm text-accent-blue hover:underline"><Plus size={14} /> Add row</button>
               </div>
-            ))}
-            <button onClick={addRow} className="flex items-center gap-1 text-sm text-accent-blue hover:underline"><Plus size={14} /> Add row</button>
-          </div>
+            )}
+          </>
+        ) : (
+          <>
+            <p className="text-xs text-text-muted">
+              <strong>Export</strong> the products first, edit the shop columns so each number is the stock you want to <strong>add</strong>, then upload the edited file here. The numbers in the shop columns are <strong>added</strong> to current stock; columns/rows with 0 (or blank) are ignored.
+            </p>
+            <input type="file" accept=".csv,text/csv" onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0])} className="w-full border border-input-border rounded px-3 py-2 text-sm bg-input-bg" />
+            {fileName && (
+              <p className="text-sm text-text-secondary">
+                Found <strong>{csvItems.length}</strong> stock addition(s) across {new Set(csvItems.map((c) => c.productName)).size} product(s) from {fileName}.
+              </p>
+            )}
+          </>
         )}
+
         {error && <p className="text-sm text-accent-red">{error}</p>}
         {result && (
           <div className="rounded-lg bg-accent-green/10 border border-accent-green/30 px-3 py-2 text-sm text-text-primary">
             Restocked <strong>{result.updated}</strong> of {result.total} entries.
-            {result.warnings.length > 0 && <ul className="mt-1 list-disc list-inside text-accent-orange text-xs">{result.warnings.map((w, i) => <li key={i}>{w}</li>)}</ul>}
+            {result.warnings.length > 0 && <ul className="mt-1 list-disc list-inside text-accent-orange text-xs max-h-28 overflow-y-auto">{result.warnings.map((w, i) => <li key={i}>{w}</li>)}</ul>}
           </div>
         )}
         <div className="flex justify-end gap-2">
           <button onClick={onClose} className="bg-white/10 text-text-primary px-4 py-2 rounded text-sm font-medium">{result ? 'Done' : 'Cancel'}</button>
-          {!result && <button onClick={submit} disabled={restock.isPending} className="btn-grad px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-60">{restock.isPending ? 'Restocking...' : 'Restock'}</button>}
+          {!result && <button onClick={submit} disabled={restock.isPending || (mode === 'csv' && csvItems.length === 0)} className="btn-grad px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-60">{restock.isPending ? 'Restocking...' : 'Restock'}</button>}
         </div>
       </div>
     </Modal>
   );
 }
 
-function ProductFormModal({ title, onClose, onSubmit, buttonLabel, disabled, error, formName, setFormName, formBrand, setFormBrand, formPrice, setFormPrice, formAlert, setFormAlert, formQuantities, setFormQuantities, branches, brands }: {
+function ProductFormModal({ title, onClose, onSubmit, buttonLabel, disabled, error, formName, setFormName, formBrand, setFormBrand, formPrice, setFormPrice, formAlert, setFormAlert, formImage, setFormImage, isAdmin, formQuantities, setFormQuantities, branches, brands }: {
   title: string; onClose: () => void; onSubmit: () => void; buttonLabel: string; disabled?: boolean; error?: string | null;
   formName: string; setFormName: (v: string) => void; formBrand: string; setFormBrand: (v: string) => void;
   formPrice: string; setFormPrice: (v: string) => void; formAlert: string; setFormAlert: (v: string) => void;
+  formImage: string | null; setFormImage: (v: string | null) => void; isAdmin: boolean;
   formQuantities: Record<string, string>; setFormQuantities: (v: Record<string, string>) => void;
   branches: { id: string; name: string }[]; brands: { id: string; name: string }[];
 }) {
+  const [imageError, setImageError] = useState<string | null>(null);
+
+  async function handleImageFile(file: File) {
+    setImageError(null);
+    try {
+      const dataUrl = await fileToResizedDataUrl(file, 512, 0.85);
+      setFormImage(dataUrl);
+    } catch (e) {
+      setImageError(e instanceof Error ? e.message : 'Could not process the image.');
+    }
+  }
+
   return (
     <Modal title={title} onClose={onClose}>
       <div className="space-y-4 max-h-[70vh] overflow-y-auto">
         <div>
           <label className="block text-sm font-medium text-text-primary mb-1">Name</label>
           <input type="text" value={formName} onChange={(e) => setFormName(e.target.value)} className="w-full border border-input-border rounded px-3 py-2 text-sm bg-input-bg focus:outline-none focus:border-input-focus" />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-text-primary mb-1">Image</label>
+          <div className="flex items-center gap-3">
+            <div className="w-16 h-16 rounded bg-white/10 overflow-hidden flex items-center justify-center shrink-0">
+              {formImage ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={formImage} alt="Product preview" className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-[10px] text-text-muted">No Image</span>
+              )}
+            </div>
+            {isAdmin ? (
+              <div className="flex-1 space-y-1">
+                <input type="file" accept="image/*" onChange={(e) => e.target.files?.[0] && handleImageFile(e.target.files[0])} className="w-full text-xs text-text-secondary file:mr-2 file:py-1.5 file:px-3 file:rounded file:border-0 file:bg-btn-primary file:text-white file:text-xs" />
+                {formImage && (
+                  <button type="button" onClick={() => { setFormImage(null); setImageError(null); }} className="text-xs text-accent-red hover:underline">Remove image</button>
+                )}
+                {imageError && <p className="text-xs text-accent-red">{imageError}</p>}
+              </div>
+            ) : (
+              <p className="flex-1 text-xs text-text-muted">Only an admin can change the product image.</p>
+            )}
+          </div>
         </div>
         <div>
           <label className="block text-sm font-medium text-text-primary mb-1">Quantity per shop</label>

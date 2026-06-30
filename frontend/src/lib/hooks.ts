@@ -128,7 +128,7 @@ export function useArchivedBrands() {
 export function useCreateBrand() {
   const invalidate = useInvalidate();
   return useMutation({
-    mutationFn: (body: { name: string; coverImage?: string }) =>
+    mutationFn: (body: { name: string; coverImage?: string | null }) =>
       api.post('/brands', body).then((r) => r.data.data),
     onSuccess: () => invalidate(['brands'], ['stats']),
   });
@@ -137,7 +137,7 @@ export function useCreateBrand() {
 export function useUpdateBrand() {
   const invalidate = useInvalidate();
   return useMutation({
-    mutationFn: ({ id, ...body }: { id: string; name?: string; coverImage?: string }) =>
+    mutationFn: ({ id, ...body }: { id: string; name?: string; coverImage?: string | null }) =>
       api.patch(`/brands/${id}`, body).then((r) => r.data.data),
     onSuccess: () => invalidate(['brands']),
   });
@@ -167,6 +167,7 @@ export interface ProductMutationInput {
   brandId: string;
   sellingPrice: number;
   quantityAlert?: number;
+  image?: string;
   quantities?: { branchId: string; quantity: number }[];
 }
 
