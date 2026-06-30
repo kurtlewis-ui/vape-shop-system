@@ -36,6 +36,11 @@ export class CreateUserDto {
   @MinLength(1)
   lastName: string;
 
+  @ApiProperty({ example: 'A', required: false, description: 'Middle initial' })
+  @IsString()
+  @IsOptional()
+  middleInitial?: string;
+
   @ApiProperty({ example: 'role-uuid' })
   @IsUUID()
   @IsNotEmpty()

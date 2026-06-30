@@ -7,6 +7,7 @@ import {
 import { Prisma, SaleStatus } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateSaleDto } from './dto/create-sale.dto';
+import { UpdateSaleDto } from './dto/update-sale.dto';
 import { QuerySaleDto } from './dto/query-sale.dto';
 import { RequestUser } from '../../common/interfaces/request-user.interface';
 
@@ -232,6 +233,75 @@ export class SalesService {
 
       return this.serialize(updated);
     });
+  }
+
+  /**
+   * Edit a PENDING sale. Replaces line items (with fresh price snapshots) when
+   * `items` is provided, and recomputes the total. Approved/declined sales are
+   * immutable. Staff may only edit their own sales.
+   */
+  async update(id: string, dto: UpdateSaleDto, actor: RequestUser) {
+    const sale = await this.prisma.sale.findUnique({ where: { id } });
+    if (!sale) {
+      throw new NotFoundException('Sale not found');
+    }
+    if (sale.status !== SaleStatus.PENDING) {
+      throw new BadRequestException('Only pending sales can be edited');
+    }
+    if (actor.role === 'Staff' && sale.staffId !== actor.userId) {
+      throw new ForbiddenException('You can only edit your own sales');
+    }
+
+    const data: Prisma.SaleUpdateInput = {};
+    if (dto.customerName !== undefined) {
+      data.customerName = dto.customerName?.trim() || null;
+    }
+    if (dto.paymentMethod !== undefined) {
+      data.paymentMethod = dto.paymentMethod;
+    }
+
+    if (dto.items?.length) {
+      const productIds = [...new Set(dto.items.map((i) => i.productId))];
+      const products = await this.prisma.product.findMany({
+        where: { id: { in: productIds }, deletedAt: null },
+        include: { brand: { select: { name: true } } },
+      });
+      if (products.length !== productIds.length) {
+        throw new BadRequestException('One or more products do not exist');
+      }
+      const productMap = new Map(products.map((p) => [p.id, p]));
+
+      const newItems = dto.items.map((item) => {
+        const product = productMap.get(item.productId)!;
+        const unitPrice = new Prisma.Decimal(product.sellingPrice);
+        return {
+          productId: product.id,
+          name: product.name,
+          brandName: product.brand.name,
+          quantity: item.quantity,
+          unitPrice,
+          subTotal: unitPrice.mul(item.quantity),
+        };
+      });
+      data.total = newItems.reduce(
+        (sum, i) => sum.add(i.subTotal),
+        new Prisma.Decimal(0),
+      );
+      // Replace items wholesale.
+      data.items = { deleteMany: {}, create: newItems };
+    }
+
+    const updated = await this.prisma.sale.update({
+      where: { id },
+      data,
+      include: this.includeFull(),
+    });
+
+    await this.audit(actor.userId, 'SALE_UPDATED', id, {
+      number: sale.number,
+    });
+
+    return this.serialize(updated);
   }
 
   async decline(id: string, actor: RequestUser) {
