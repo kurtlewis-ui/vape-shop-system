@@ -18,6 +18,7 @@ import {
   Minus,
   Trash2,
   CheckCircle2,
+  Settings as SettingsIcon,
 } from 'lucide-react';
 
 function peso(n: number) {
@@ -98,6 +99,14 @@ export default function StaffLayout({ children }: { children: ReactNode }) {
                 )}
               </div>
             </div>
+            <Link
+              href="/staff/settings"
+              className="flex items-center rounded-lg p-2 text-sm text-text-secondary hover:text-text-primary hover:bg-white/5 transition-colors"
+              title="Settings"
+              aria-label="Settings"
+            >
+              <SettingsIcon size={16} />
+            </Link>
             <button
               onClick={handleLogout}
               className="flex items-center gap-1 rounded-lg p-2 text-sm text-text-secondary hover:text-accent-red hover:bg-accent-red/10 transition-colors"

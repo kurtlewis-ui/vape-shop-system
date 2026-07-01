@@ -2,6 +2,6 @@
 
 import AccountSettings from '@/components/AccountSettings';
 
-export default function SettingsPage() {
+export default function StaffSettingsPage() {
   return <AccountSettings />;
 }
