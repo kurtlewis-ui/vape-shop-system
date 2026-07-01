@@ -44,7 +44,7 @@ export default function LoginPage() {
 
       const { accessToken, user } = response.data.data;
       setAuth(accessToken, user);
-      router.replace('/dashboard');
+      router.replace(user.role?.name === 'Staff' ? '/staff' : '/dashboard');
     } catch (err) {
       setError(getApiErrorMessage(err, 'Login failed. Check your email and password.'));
     } finally {

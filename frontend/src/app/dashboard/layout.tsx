@@ -94,8 +94,11 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (mounted && !accessToken) {
       router.replace('/login');
+    } else if (mounted && user && user.role?.name === 'Staff') {
+      // Staff have their own portal; keep them out of the admin dashboard.
+      router.replace('/staff');
     }
-  }, [mounted, accessToken, router]);
+  }, [mounted, accessToken, user, router]);
 
   function handleLogout() {
     logout();
@@ -121,7 +124,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     );
   }
 
-  if (!accessToken) {
+  if (!accessToken || (user && user.role?.name === 'Staff')) {
     return null;
   }
 
