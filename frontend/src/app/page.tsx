@@ -8,10 +8,15 @@ import { useAuthStore } from '@/lib/store';
 export default function Home() {
   const router = useRouter();
   const accessToken = useAuthStore((state) => state.accessToken);
+  const user = useAuthStore((state) => state.user);
 
   useEffect(() => {
-    router.replace(accessToken ? '/dashboard' : '/login');
-  }, [accessToken, router]);
+    if (!accessToken) {
+      router.replace('/login');
+      return;
+    }
+    router.replace(user?.role?.name === 'Staff' ? '/staff' : '/dashboard');
+  }, [accessToken, user, router]);
 
   return (
     <main className="flex min-h-screen items-center justify-center">
