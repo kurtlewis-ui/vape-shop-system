@@ -53,7 +53,6 @@ const navItems: NavItem[] = [
       { label: 'Brands Archive', href: '/dashboard/archive/brands' },
     ],
   },
-  { label: 'Settings', href: '/dashboard/settings', icon: <SettingsIcon size={16} /> },
 ];
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
@@ -151,6 +150,14 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               <span className="text-sm font-medium text-text-primary hidden sm:inline">
                 {user?.firstName} {user?.lastName}
               </span>
+            </Link>
+            <Link
+              href="/dashboard/settings"
+              className="flex items-center rounded-lg p-2 text-sm text-text-secondary hover:text-text-primary hover:bg-white/5 transition-colors"
+              title="Settings"
+              aria-label="Settings"
+            >
+              <SettingsIcon size={16} />
             </Link>
             <button
               onClick={handleLogout}
