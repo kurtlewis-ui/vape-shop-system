@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Search, Loader2, Plus, Check } from 'lucide-react';
-import { useBrands, useProducts } from '@/lib/hooks';
+import { ArrowLeft, Search, Loader2, X, CheckCircle2 } from 'lucide-react';
+import { useBrands, useProducts, useCreateDisposal } from '@/lib/hooks';
 import { useAuthStore } from '@/lib/store';
 import { useDraftStore } from '@/lib/draft';
 import { getApiErrorMessage } from '@/lib/api';
@@ -12,12 +12,22 @@ function peso(n: number) {
   return `\u20B1${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
+type StaffProduct = {
+  id: string;
+  name: string;
+  image: string | null;
+  sellingPrice: number;
+  totalQuantity: number;
+  brand: { id: string; name: string } | null;
+};
+
 export default function BrandProductsPage() {
   const router = useRouter();
   const params = useParams();
   const brandId = String(params.brandId);
   const [search, setSearch] = useState('');
-  const [added, setAdded] = useState<string | null>(null);
+  const [selected, setSelected] = useState<StaffProduct | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
 
   const user = useAuthStore((s) => s.user);
   const branchId = user?.branch?.id;
@@ -27,25 +37,12 @@ export default function BrandProductsPage() {
   const brand = (brandData?.data ?? []).find((b) => b.id === brandId);
 
   const { data, isLoading, isError, error } = useProducts({ brandId, branchId, search });
-  const products = data?.data ?? [];
+  const products = (data?.data ?? []) as StaffProduct[];
 
-  const addItem = useDraftStore((s) => s.addItem);
-
-  function handleAdd(p: (typeof products)[number]) {
-    addItem({
-      productId: p.id,
-      name: p.name,
-      brandName: p.brand?.name ?? brand?.name ?? '',
-      unitPrice: p.sellingPrice,
-      image: p.image,
-    });
-    setAdded(p.id);
-    setTimeout(() => setAdded((cur) => (cur === p.id ? null : cur)), 1200);
+  function showToast(msg: string) {
+    setToast(msg);
+    setTimeout(() => setToast((cur) => (cur === msg ? null : cur)), 2500);
   }
-
-  // With branchId passed, the backend returns only that branch's inventory,
-  // so totalQuantity is the stock at the staff's shop.
-  const stockOf = (p: (typeof products)[number]) => p.totalQuantity;
 
   return (
     <div>
@@ -88,42 +85,155 @@ export default function BrandProductsPage() {
         <div className="py-16 text-center text-text-muted">No products found for this brand.</div>
       ) : (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-          {products.map((p) => {
-            const stock = stockOf(p);
-            const outOfStock = stock <= 0;
-            return (
-              <div key={p.id} className="flex flex-col overflow-hidden rounded-xl border border-card-border bg-card-bg shadow-sm">
-                <div className="flex aspect-square items-center justify-center bg-white/5">
-                  {p.image ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={p.image} alt={p.name} className="h-full w-full object-cover" />
-                  ) : (
-                    <span className="text-xs text-text-muted">No Image Available</span>
-                  )}
-                </div>
-                <div className="flex flex-1 flex-col px-3 py-2">
-                  <p className="truncate text-sm font-semibold text-text-primary" title={p.name}>{p.name}</p>
-                  <p className="text-sm font-bold text-accent-purple-light">{peso(p.sellingPrice)}</p>
-                  <p className={`text-xs ${outOfStock ? 'text-accent-red' : 'text-text-muted'}`}>Stock: {stock}</p>
-                  <button
-                    onClick={() => handleAdd(p)}
-                    disabled={outOfStock}
-                    className="mt-2 flex items-center justify-center gap-1 rounded-lg btn-grad px-2 py-1.5 text-xs font-medium disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {added === p.id ? (
-                      <><Check size={13} /> Added</>
-                    ) : outOfStock ? (
-                      'Out of stock'
-                    ) : (
-                      <><Plus size={13} /> Add to order</>
-                    )}
-                  </button>
-                </div>
+          {products.map((p) => (
+            <button
+              key={p.id}
+              onClick={() => setSelected(p)}
+              className="flex flex-col overflow-hidden rounded-xl border border-card-border bg-card-bg text-left shadow-sm transition hover:border-accent-primary/50 hover:shadow-md hover:shadow-accent-primary/10"
+            >
+              <div className="flex aspect-square items-center justify-center bg-white/5">
+                {p.image ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={p.image} alt={p.name} className="h-full w-full object-cover" />
+                ) : (
+                  <span className="text-xs text-text-muted">No Image Available</span>
+                )}
               </div>
-            );
-          })}
+              <div className="px-3 py-2">
+                <p className="truncate text-sm font-semibold text-text-primary" title={p.name}>{p.name}</p>
+                <p className="text-sm font-bold text-accent-purple-light">{peso(p.sellingPrice)}</p>
+                <p className={`text-xs ${p.totalQuantity <= 0 ? 'text-accent-red' : 'text-text-muted'}`}>Stock/s: {p.totalQuantity}</p>
+              </div>
+            </button>
+          ))}
         </div>
       )}
+
+      {selected && (
+        <AddPurchaseModal
+          product={selected}
+          onClose={() => setSelected(null)}
+          onSaved={(msg) => { setSelected(null); showToast(msg); }}
+        />
+      )}
+
+      {toast && (
+        <div className="fixed bottom-24 left-1/2 z-50 -translate-x-1/2 rounded-lg bg-accent-green/90 px-4 py-2 text-sm font-medium text-white shadow-lg flex items-center gap-2">
+          <CheckCircle2 size={16} /> {toast}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function AddPurchaseModal({
+  product,
+  onClose,
+  onSaved,
+}: {
+  product: StaffProduct;
+  onClose: () => void;
+  onSaved: (message: string) => void;
+}) {
+  const [quantity, setQuantity] = useState('1');
+  const [error, setError] = useState<string | null>(null);
+  const addItem = useDraftStore((s) => s.addItem);
+  const createDisposal = useCreateDisposal();
+
+  const stock = product.totalQuantity;
+
+  function validQty(): number | null {
+    const qty = Number(quantity);
+    if (!qty || qty < 1) { setError('Enter a quantity of at least 1.'); return null; }
+    if (qty > stock) { setError(`Only ${stock} in stock at your shop.`); return null; }
+    return qty;
+  }
+
+  function handleSaveRecords() {
+    setError(null);
+    const qty = validQty();
+    if (qty === null) return;
+    addItem(
+      {
+        productId: product.id,
+        name: product.name,
+        brandName: product.brand?.name ?? '',
+        unitPrice: product.sellingPrice,
+        image: product.image,
+      },
+      qty,
+    );
+    onSaved(`Added ${qty}× ${product.name} to your draft order.`);
+  }
+
+  async function handleDispose() {
+    setError(null);
+    const qty = validQty();
+    if (qty === null) return;
+    try {
+      await createDisposal.mutateAsync({ productId: product.id, quantity: qty });
+      onSaved(`Disposal request for ${qty}× ${product.name} sent for approval.`);
+    } catch (e) {
+      setError(getApiErrorMessage(e));
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
+      <div className="relative w-full max-w-sm mx-4 rounded-lg border border-card-border bg-card-bg p-5 shadow-xl">
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="text-lg font-bold text-text-primary">Add Purchase</h3>
+          <button onClick={onClose} className="text-text-muted hover:text-text-primary transition"><X size={20} /></button>
+        </div>
+
+        <div className="mb-4 flex items-center gap-3">
+          <div className="h-14 w-14 shrink-0 overflow-hidden rounded bg-white/10 flex items-center justify-center">
+            {product.image ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={product.image} alt={product.name} className="h-full w-full object-cover" />
+            ) : (
+              <span className="text-[9px] text-text-muted">No Img</span>
+            )}
+          </div>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold text-text-primary">{product.name}</p>
+            <p className="text-sm font-bold text-accent-purple-light">{peso(product.sellingPrice)}</p>
+            <p className={`text-xs ${stock <= 0 ? 'text-accent-red' : 'text-text-muted'}`}>Stock/s: {stock}</p>
+          </div>
+        </div>
+
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-text-primary mb-1">Quantity</label>
+          <input
+            type="number"
+            min="1"
+            max={stock}
+            value={quantity}
+            onChange={(e) => setQuantity(e.target.value)}
+            className="w-full rounded border border-input-border bg-input-bg px-3 py-2 text-sm focus:outline-none focus:border-input-focus"
+          />
+        </div>
+
+        {error && <p className="mb-3 text-sm text-accent-red">{error}</p>}
+
+        <div className="flex flex-col items-end gap-2">
+          <button
+            onClick={handleSaveRecords}
+            disabled={stock <= 0 || createDisposal.isPending}
+            className="rounded-lg bg-btn-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90 transition disabled:opacity-50"
+          >
+            Save Records
+          </button>
+          <button
+            onClick={handleDispose}
+            disabled={stock <= 0 || createDisposal.isPending}
+            className="rounded-lg bg-accent-red px-4 py-2 text-sm font-medium text-white hover:opacity-90 transition disabled:opacity-50"
+          >
+            {createDisposal.isPending ? 'Submitting…' : 'Dispose'}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
