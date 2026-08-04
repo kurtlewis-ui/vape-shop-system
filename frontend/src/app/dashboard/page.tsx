@@ -37,6 +37,7 @@ export default function DashboardPage() {
   const [revenueEndDate, setRevenueEndDate] = useState('');
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
+  const [exportStatus, setExportStatus] = useState('');
 
   const { data: overview = [], isLoading: ovLoading } = useSalesOverview(period, overviewShop || undefined);
   const { data: topProducts = [], isLoading: tpLoading } = useTopProducts(topShop || undefined);
@@ -99,11 +100,14 @@ export default function DashboardPage() {
           onClick={async () => {
             setExporting(true);
             setExportError(null);
+            setExportStatus('Starting export...');
             try {
               const { exportAllData } = await import('@/lib/export-all');
-              await exportAllData();
+              await exportAllData((status) => setExportStatus(status));
+              setExportStatus('');
             } catch (e: any) {
               setExportError(e?.message ?? 'Export failed');
+              setExportStatus('');
             } finally {
               setExporting(false);
             }
@@ -111,7 +115,7 @@ export default function DashboardPage() {
           disabled={exporting}
           className="flex items-center gap-2 bg-btn-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition disabled:opacity-60"
         >
-          <Download size={16} /> {exporting ? 'Exporting...' : 'Export All Data'}
+          <Download size={16} /> {exporting ? exportStatus || 'Exporting...' : 'Export All Data'}
         </button>
       </div>
       {exportError && (
