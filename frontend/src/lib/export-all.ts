@@ -17,10 +17,10 @@ function formatSplitBreakdown(split: { cash: number; gcash: number; bankTransfer
 
 export async function exportAllData(): Promise<void> {
   const [salesRes, disposalsRes, expensesRes, productsRes] = await Promise.all([
-    api.get('/sales/records', { params: { limit: 10000 } }),
-    api.get('/disposals', { params: { limit: 10000 } }),
-    api.get('/expenses', { params: { limit: 10000 } }),
-    api.get('/products', { params: { limit: 10000 } }),
+    api.get('/sales/records', { params: { limit: 200 } }),
+    api.get('/disposals', { params: { limit: 200 } }),
+    api.get('/expenses', { params: { limit: 200 } }),
+    api.get('/products', { params: { limit: 200 } }),
   ]);
 
   const sales: any[] = salesRes.data.data ?? [];

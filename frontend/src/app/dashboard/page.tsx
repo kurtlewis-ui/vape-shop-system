@@ -42,8 +42,8 @@ export default function DashboardPage() {
   const { data: topProducts = [], isLoading: tpLoading } = useTopProducts(topShop || undefined);
 
   // Disposals data for "Most Disposed Products" chart
-  const { data: disposalsData } = useDisposals({ branchId: disposalShop || undefined, status: 'APPROVED' });
-  const disposals = disposalsData?.data ?? [];
+  const { data: disposalsData } = useDisposals({ branchId: disposalShop || undefined });
+  const disposals = (disposalsData?.data ?? []).filter((d) => d.status === 'APPROVED');
 
   // Compute top disposed products (group by product name, sum quantity)
   const disposedProducts = useMemo(() => {
